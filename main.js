@@ -296,17 +296,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   });
 
-  // ScrollTrigger to highlight active link based on current section
-  const storySec = document.getElementById("story");
-  if (storySec && typeof ScrollTrigger !== "undefined") {
-    ScrollTrigger.create({
-      trigger: storySec,
-      start: "top 40%",
-      end: "bottom 60%",
-      onEnter: () => setActiveNavLink("solutions"),
-      onLeaveBack: () => setActiveNavLink("home")
-    });
-  }
+  // Section active navigation links are dynamically synchronized in updateNavScrollState() below
 
   const showcaseSec = document.getElementById("solutions-showcase");
   if (showcaseSec && typeof ScrollTrigger !== "undefined") {
@@ -502,25 +492,50 @@ document.addEventListener("DOMContentLoaded", () => {
     if (navClose) navClose.addEventListener("click", () => toggleMenu(false));
   }
 
-  // Nav scroll background blur & white text
+  // Nav scroll background blur & floating pill transition
+  // Stays completely transparent (Image 1) throughout the entire Hero section (including 360 rotation),
+  // and only transitions to the floating pill bar (Image 2) once the user reaches Section 2 (#story).
   const navBar = document.querySelector(".nav__bar");
   const navNavigation = document.querySelector(".navigation");
+  const storySectionEl = document.getElementById("story");
+
   function updateNavScrollState() {
-    const currentY = window.scrollY || window.pageYOffset || (typeof lenis !== "undefined" && lenis ? lenis.scroll : 0) || document.documentElement.scrollTop || 0;
-    const isScrolled = currentY > 20;
-    if (navBar) navBar.classList.toggle("is-scrolled", isScrolled);
+    if (!navBar) return;
+    let isScrolled = false;
+    if (storySectionEl) {
+      const rect = storySectionEl.getBoundingClientRect();
+      // Section 2 has arrived at or near the top of the viewport
+      isScrolled = rect.top <= 120;
+    } else {
+      const currentY = window.scrollY || window.pageYOffset || (typeof lenis !== "undefined" && lenis ? lenis.scroll : 0) || document.documentElement.scrollTop || 0;
+      isScrolled = currentY >= 2500;
+    }
+    navBar.classList.toggle("is-scrolled", isScrolled);
     if (navNavigation) navNavigation.classList.toggle("is-scrolled", isScrolled);
+
+    if (isScrolled) {
+      const footerEl = document.querySelector(".aqua-footer") || document.getElementById("footer");
+      if (footerEl && footerEl.getBoundingClientRect().top <= 350) {
+        setActiveNavLink("contact");
+      } else {
+        setActiveNavLink("solutions");
+      }
+    } else {
+      setActiveNavLink("home");
+    }
   }
 
   window.addEventListener("scroll", updateNavScrollState, { passive: true });
   if (typeof lenis !== "undefined" && lenis) {
     lenis.on("scroll", updateNavScrollState);
   }
-  ScrollTrigger.create({
-    trigger: document.body,
-    start: "top -20",
-    onUpdate: () => updateNavScrollState()
-  });
+  if (storySectionEl && typeof ScrollTrigger !== "undefined") {
+    ScrollTrigger.create({
+      trigger: storySectionEl,
+      start: "top 120px",
+      onUpdate: () => updateNavScrollState()
+    });
+  }
   updateNavScrollState();
 
   // -------------------------------------------------------------

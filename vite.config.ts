@@ -27,6 +27,7 @@ function copyStaticAssets(): Plugin {
       copyFile('slater-custom.js', 'dist/slater-custom.js');
       copyFile('main.js', 'dist/main.js');
       copyFile('promec-logo.svg', 'dist/promec-logo.svg');
+      copyFile('favicon.ico', 'dist/favicon.ico');
       copyFile('slater-custom.css', 'dist/slater-custom.css');
       copyFile('custom-enhancements.css', 'dist/custom-enhancements.css');
       copyFile('webflow-core.css', 'dist/webflow-core.css');

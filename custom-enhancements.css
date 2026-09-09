@@ -2167,6 +2167,8 @@ div.btn-icon-link.theme-yellow:hover .btn-icon-content {
   justify-content: center;
   align-items: center;
   will-change: transform;
+  perspective: 1400px;
+  perspective-origin: 50% 50%;
 }
 
 .aqua-story__product-frame {
@@ -2178,6 +2180,9 @@ div.btn-icon-link.theme-yellow:hover .btn-icon-content {
   background: #080a0c;
   border: 1px solid rgba(255, 255, 255, 0.16);
   box-shadow: 0 35px 100px rgba(0, 0, 0, 0.95), 0 0 40px rgba(255, 229, 0, 0.14);
+  transform-style: preserve-3d;
+  will-change: transform;
+  backface-visibility: hidden;
 }
 
 .aqua-story__product-img {
@@ -2190,8 +2195,9 @@ div.btn-icon-link.theme-yellow:hover .btn-icon-content {
   object-position: center center;
   display: block;
   opacity: 0;
-  transition: opacity 0.5s cubic-bezier(0.16, 1, 0.3, 1), transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
-  transform: scale(1.04);
+  transition: opacity 0.15s ease, transform 0.25s ease;
+  transform: scale(1.02);
+  backface-visibility: hidden;
 }
 
 .aqua-story__product-img.is-active {

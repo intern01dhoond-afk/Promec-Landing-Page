@@ -774,6 +774,26 @@ document.addEventListener("DOMContentLoaded", () => {
     const productStage = storySection.querySelector("[data-story-product-stage]");
     const productTraveler = storySection.querySelector("[data-story-product-traveler]");
 
+    // Category Image & Tag synchronization
+    const storyProductImgs = storySection.querySelectorAll(".aqua-story__product-img");
+    const storyTagText = storySection.querySelector("[data-story-tag-text]");
+    const categoryTagLabels = ["AUTOCARE", "HOME CARE", "GIG WORKERS", "CORPORATE CARE"];
+
+    function setActiveStoryCategory(index) {
+      if (storyProductImgs.length > 0) {
+        storyProductImgs.forEach((img, i) => {
+          if (i === index) {
+            img.classList.add("is-active");
+          } else {
+            img.classList.remove("is-active");
+          }
+        });
+      }
+      if (storyTagText && categoryTagLabels[index]) {
+        storyTagText.textContent = categoryTagLabels[index];
+      }
+    }
+
     // Smooth horizontal travel for desktop view
     if (productStage && productTraveler) {
       const productImg = productTraveler.querySelector(".aqua-story__product-img");
@@ -924,75 +944,79 @@ document.addEventListener("DOMContentLoaded", () => {
           });
         }
 
-        // 10A-2. SECTION 2 HORIZONTAL TRAVELER TIMELINE
+        const productFrame = productTraveler.querySelector(".aqua-story__product-frame");
+
+        // 10A-2. SECTION 2 HORIZONTAL TRAVELER & 3D CARD FLIP TIMELINE
+        // Flips from Card 1 -> Card 2 -> Card 3 -> Card 4 as each usecase is reached
         const storyTL = gsap.timeline({
           scrollTrigger: {
             trigger: storySection,
             start: "top top",
             end: "bottom bottom",
             scrub: 0.8,
-            invalidateOnRefresh: true
-          }
-        });
-
-        storyTL
-          // Card 01 (Right) -> Card 02 (Left)
-          .fromTo(productTraveler,
-            { x: 320, scale: 1 },
-            {
-              x: -320,
-              rotateY: 8,
-              duration: 1,
-              ease: "power1.inOut"
+            invalidateOnRefresh: true,
+            onUpdate: (self) => {
+              const p = self.progress;
+              // Midpoints: 0.6 / 3.65 = 0.164, 1.8 / 3.65 = 0.493, 3.0 / 3.65 = 0.822
+              let activeIdx = 0;
+              if (p >= 0.822) {
+                activeIdx = 3;
+              } else if (p >= 0.493) {
+                activeIdx = 2;
+              } else if (p >= 0.164) {
+                activeIdx = 1;
+              } else {
+                activeIdx = 0;
+              }
+              setActiveStoryCategory(activeIdx);
             }
-          )
-          .to(productTraveler, {
-            rotateY: 0,
-            duration: 0.2
-          })
-          // Card 02 (Left) -> Card 03 (Right)
-          .to(productTraveler, {
-            x: 320,
-            rotateY: -8,
-            duration: 1,
-            ease: "power1.inOut"
-          })
-          .to(productTraveler, {
-            rotateY: 0,
-            duration: 0.2
-          })
-          // Card 03 (Right) -> Card 04 (Left)
-          .to(productTraveler, {
-            x: -320,
-            rotateY: 8,
-            duration: 1,
-            ease: "power1.inOut"
-          })
-          .to(productTraveler, {
-            rotateY: 0,
-            duration: 0.2
-          });
-      });
-    }
-
-    // Synchronize Category Image & Tag with active Row on scroll
-    const storyProductImgs = storySection.querySelectorAll(".aqua-story__product-img");
-    const storyTagText = storySection.querySelector("[data-story-tag-text]");
-    const categoryTagLabels = ["AUTOCARE", "HOME CARE", "GIG WORKERS", "CORPORATE CARE"];
-
-    function setActiveStoryCategory(index) {
-      if (storyProductImgs.length > 0) {
-        storyProductImgs.forEach((img, i) => {
-          if (i === index) {
-            img.classList.add("is-active");
-          } else {
-            img.classList.remove("is-active");
           }
         });
-      }
-      if (storyTagText && categoryTagLabels[index]) {
-        storyTagText.textContent = categoryTagLabels[index];
-      }
+
+        // Initialize starting position
+        gsap.set(productTraveler, { x: 320 });
+        if (productFrame) {
+          gsap.set(productFrame, { rotateY: 0, scale: 1, transformPerspective: 1400 });
+        }
+
+        // --- TRANSITION 1: Card 01 (Autocare) -> Card 02 (Home Care) ---
+        // 1. Move to center and flip away Card 1 (0 -> 90deg, scale 1 -> 1.08)
+        storyTL
+          .to(productTraveler, { x: 0, duration: 0.45, ease: "power1.in" }, 0.15)
+          .to(productFrame, { rotateY: 90, scale: 1.08, duration: 0.45, ease: "power1.in" }, 0.15)
+          // 2. Flip in and reveal Card 2 (-90 -> 0deg, scale 1.08 -> 1, move to -320)
+          .fromTo(productFrame,
+            { rotateY: -90, scale: 1.08 },
+            { rotateY: 0, scale: 1, duration: 0.45, ease: "power1.out", immediateRender: false },
+            0.6
+          )
+          .to(productTraveler, { x: -320, duration: 0.45, ease: "power1.out" }, 0.6)
+
+        // --- TRANSITION 2: Card 02 (Home Care) -> Card 03 (Gig Workers) ---
+        // 1. Move to center and flip away Card 2 (0 -> -90deg, scale 1 -> 1.08)
+          .to(productTraveler, { x: 0, duration: 0.45, ease: "power1.in" }, 1.35)
+          .to(productFrame, { rotateY: -90, scale: 1.08, duration: 0.45, ease: "power1.in" }, 1.35)
+          // 2. Flip in and reveal Card 3 (90 -> 0deg, scale 1.08 -> 1, move to 320)
+          .fromTo(productFrame,
+            { rotateY: 90, scale: 1.08 },
+            { rotateY: 0, scale: 1, duration: 0.45, ease: "power1.out", immediateRender: false },
+            1.8
+          )
+          .to(productTraveler, { x: 320, duration: 0.45, ease: "power1.out" }, 1.8)
+
+        // --- TRANSITION 3: Card 03 (Gig Workers) -> Card 04 (Corporate Care) ---
+        // 1. Move to center and flip away Card 3 (0 -> 90deg, scale 1 -> 1.08)
+          .to(productTraveler, { x: 0, duration: 0.45, ease: "power1.in" }, 2.55)
+          .to(productFrame, { rotateY: 90, scale: 1.08, duration: 0.45, ease: "power1.in" }, 2.55)
+          // 2. Flip in and reveal Card 4 (-90 -> 0deg, scale 1.08 -> 1, move to -320)
+          .fromTo(productFrame,
+            { rotateY: -90, scale: 1.08 },
+            { rotateY: 0, scale: 1, duration: 0.45, ease: "power1.out", immediateRender: false },
+            3.0
+          )
+          .to(productTraveler, { x: -320, duration: 0.45, ease: "power1.out" }, 3.0)
+          .to(productTraveler, { x: -320, duration: 0.2 }, 3.45);
+      });
     }
 
     // Subtle scroll reveal for each row content as the user navigates down
@@ -1001,8 +1025,12 @@ document.addEventListener("DOMContentLoaded", () => {
         trigger: row,
         start: "top 65%",
         end: "bottom 35%",
-        onEnter: () => setActiveStoryCategory(idx),
-        onEnterBack: () => setActiveStoryCategory(idx)
+        onEnter: () => {
+          if (window.innerWidth < 992) setActiveStoryCategory(idx);
+        },
+        onEnterBack: () => {
+          if (window.innerWidth < 992) setActiveStoryCategory(idx);
+        }
       });
 
       if (idx === 0) return; // Row 1 is smoothly revealed during the Hero -> Section 2 handoff

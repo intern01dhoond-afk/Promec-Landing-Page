@@ -110,81 +110,9 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // -------------------------------------------------------------
-  // 3. ZAJNO CUSTOM DYNAMIC CURSOR & MAGNETIC FOLLOWER
+  // 3. CURSOR MODE: NATIVE BROWSER CURSOR
   // -------------------------------------------------------------
-  const cursorDot = document.getElementById("customCursorDot");
-  const cursorFollower = document.getElementById("customCursorFollower");
-  const cursorText = document.getElementById("customCursorText");
-
   const hasFinePointer = window.matchMedia("(hover: hover) and (pointer: fine)").matches;
-
-  if (cursorDot && cursorFollower && hasFinePointer) {
-    const setDotX = gsap.quickTo(cursorDot, "x", { duration: 0.08, ease: "power3" });
-    const setDotY = gsap.quickTo(cursorDot, "y", { duration: 0.08, ease: "power3" });
-    const setFollowerX = gsap.quickTo(cursorFollower, "x", { duration: 0.32, ease: "power2.out" });
-    const setFollowerY = gsap.quickTo(cursorFollower, "y", { duration: 0.32, ease: "power2.out" });
-
-    window.addEventListener("mousemove", (e) => {
-      setDotX(e.clientX);
-      setDotY(e.clientY);
-      setFollowerX(e.clientX);
-      setFollowerY(e.clientY);
-
-      cursorDot.style.opacity = "1";
-      cursorFollower.style.opacity = "1";
-    });
-
-    document.addEventListener("mouseleave", () => {
-      cursorDot.style.opacity = "0";
-      cursorFollower.style.opacity = "0";
-    });
-
-    document.addEventListener("mousedown", () => {
-      cursorFollower.classList.add("is-active");
-    });
-
-    document.addEventListener("mouseup", () => {
-      cursorFollower.classList.remove("is-active");
-    });
-
-    // Morphing triggers
-    document.querySelectorAll("a, button, [data-magnetic], .product-nav_dropdown, .config-option-card").forEach((el) => {
-      el.addEventListener("mouseenter", () => {
-        cursorFollower.classList.add("is-hover-button");
-        cursorDot.style.opacity = "0";
-      });
-      el.addEventListener("mouseleave", () => {
-        cursorFollower.classList.remove("is-hover-button");
-        cursorDot.style.opacity = "1";
-      });
-    });
-
-    document.querySelectorAll('[data-cursor="play"]').forEach((el) => {
-      el.addEventListener("mouseenter", () => {
-        cursorFollower.classList.add("is-hover-video");
-        if (cursorText) cursorText.textContent = "PLAY";
-        cursorDot.style.opacity = "0";
-      });
-      el.addEventListener("mouseleave", () => {
-        cursorFollower.classList.remove("is-hover-video");
-        if (cursorText) cursorText.textContent = "";
-        cursorDot.style.opacity = "1";
-      });
-    });
-
-    document.querySelectorAll('[data-cursor="drag"]').forEach((el) => {
-      el.addEventListener("mouseenter", () => {
-        cursorFollower.classList.add("is-hover-drag");
-        if (cursorText) cursorText.textContent = "DRAG";
-        cursorDot.style.opacity = "0";
-      });
-      el.addEventListener("mouseleave", () => {
-        cursorFollower.classList.remove("is-hover-drag");
-        if (cursorText) cursorText.textContent = "";
-        cursorDot.style.opacity = "1";
-      });
-    });
-  }
 
   // -------------------------------------------------------------
   // 4. ZAJNO MAGNETIC BUTTON ATTRACTION PHYSICS

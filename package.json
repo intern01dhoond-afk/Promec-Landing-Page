@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "vite --port 3000 --open",
     "build": "vite build",
+    "postbuild": "node copy-static.cjs",
     "preview": "vite preview --port 3000"
   },
   "devDependencies": {

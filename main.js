@@ -818,7 +818,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const card1TextCol = storyRows[0] ? storyRows[0].querySelector(".aqua-story__text-col") : null;
 
         if (uspImg) {
-          uspImg.src = "2nd section images/autocare 1.png?v=4";
+          uspImg.src = "assets/promec_yellow_model.png";
         }
 
         // Initially hide product stage until handoff reaches Section 2

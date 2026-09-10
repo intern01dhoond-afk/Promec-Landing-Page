@@ -796,10 +796,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Smooth horizontal travel for desktop view
     if (productStage && productTraveler) {
-      const productImg = productTraveler.querySelector(".aqua-story__product-img");
-      if (productImg && typeof getHeroFrameUrl === "function") {
-        productImg.src = getHeroFrameUrl(totalHeroFrames - 1);
-      }
 
       const mm = gsap.matchMedia();
       mm.add("(min-width: 992px)", () => {
@@ -821,8 +817,8 @@ document.addEventListener("DOMContentLoaded", () => {
         const heroFadeEl = document.querySelector(".hero__fade");
         const card1TextCol = storyRows[0] ? storyRows[0].querySelector(".aqua-story__text-col") : null;
 
-        if (uspImg && typeof getHeroFrameUrl === "function") {
-          uspImg.src = getHeroFrameUrl(totalHeroFrames - 1);
+        if (uspImg) {
+          uspImg.src = "2nd section images/autocare 1.png?v=4";
         }
 
         // Initially hide product stage until handoff reaches Section 2
@@ -916,8 +912,8 @@ document.addEventListener("DOMContentLoaded", () => {
                 height: curH,
                 borderRadius: curR,
                 clipPath: `inset(0% 0% 0% 0% round ${curR}px)`,
-                boxShadow: `0 ${35 * ep}px ${100 * ep}px rgba(0, 0, 0, ${0.95 * ep}), 0 0 ${40 * ep}px rgba(255, 229, 0, ${0.14 * ep})`,
-                border: `1px solid rgba(255, 255, 255, ${0.16 * ep})`,
+                boxShadow: "none",
+                border: "none",
                 force3D: true
               });
 
@@ -973,49 +969,41 @@ document.addEventListener("DOMContentLoaded", () => {
           }
         });
 
-        // Initialize starting position
+        // Query model images inside product frame
+        const img1 = productFrame ? productFrame.querySelector('[data-story-img="1"]') : null;
+        const img2 = productFrame ? productFrame.querySelector('[data-story-img="2"]') : null;
+        const img3 = productFrame ? productFrame.querySelector('[data-story-img="3"]') : null;
+        const img4 = productFrame ? productFrame.querySelector('[data-story-img="4"]') : null;
+
+        // Initialize starting position & opacities
         gsap.set(productTraveler, { x: 320 });
         if (productFrame) {
-          gsap.set(productFrame, { rotateY: 0, scale: 1, transformPerspective: 1400 });
+          gsap.set(productFrame, { rotateY: 0, scale: 1 });
         }
+        if (img1) gsap.set(img1, { opacity: 1 });
+        if (img2) gsap.set(img2, { opacity: 0 });
+        if (img3) gsap.set(img3, { opacity: 0 });
+        if (img4) gsap.set(img4, { opacity: 0 });
 
-        // --- TRANSITION 1: Card 01 (Autocare) -> Card 02 (Home Care) ---
-        // 1. Move to center and flip away Card 1 (0 -> 90deg, scale 1 -> 1.08)
+        // --- TRANSITION 1: Card 01 (Autocare Yellow) -> Card 02 (Home Care Blue) ---
+        // Traveler glides right (+320) to left (-360) while model images smoothly scrub cross-fade at midpoint
         storyTL
-          .to(productTraveler, { x: 0, duration: 0.45, ease: "power1.in" }, 0.15)
-          .to(productFrame, { rotateY: 90, scale: 1.08, duration: 0.45, ease: "power1.in" }, 0.15)
-          // 2. Flip in and reveal Card 2 (-90 -> 0deg, scale 1.08 -> 1, move to -320)
-          .fromTo(productFrame,
-            { rotateY: -90, scale: 1.08 },
-            { rotateY: 0, scale: 1, duration: 0.45, ease: "power1.out", immediateRender: false },
-            0.6
-          )
-          .to(productTraveler, { x: -320, duration: 0.45, ease: "power1.out" }, 0.6)
+          .to(productTraveler, { x: -360, duration: 0.9, ease: "power1.inOut" }, 0.15)
+          .to(img1, { opacity: 0, duration: 0.4, ease: "power1.inOut" }, 0.4)
+          .to(img2, { opacity: 1, duration: 0.4, ease: "power1.inOut" }, 0.4)
 
-        // --- TRANSITION 2: Card 02 (Home Care) -> Card 03 (Gig Workers) ---
-        // 1. Move to center and flip away Card 2 (0 -> -90deg, scale 1 -> 1.08)
-          .to(productTraveler, { x: 0, duration: 0.45, ease: "power1.in" }, 1.35)
-          .to(productFrame, { rotateY: -90, scale: 1.08, duration: 0.45, ease: "power1.in" }, 1.35)
-          // 2. Flip in and reveal Card 3 (90 -> 0deg, scale 1.08 -> 1, move to 320)
-          .fromTo(productFrame,
-            { rotateY: 90, scale: 1.08 },
-            { rotateY: 0, scale: 1, duration: 0.45, ease: "power1.out", immediateRender: false },
-            1.8
-          )
-          .to(productTraveler, { x: 320, duration: 0.45, ease: "power1.out" }, 1.8)
+        // --- TRANSITION 2: Card 02 (Home Care Blue) -> Card 03 (Gig Workers Yellow) ---
+        // Traveler glides left (-360) to right (+320) while model images smoothly scrub cross-fade at midpoint
+          .to(productTraveler, { x: 320, duration: 0.9, ease: "power1.inOut" }, 1.35)
+          .to(img2, { opacity: 0, duration: 0.4, ease: "power1.inOut" }, 1.6)
+          .to(img3, { opacity: 1, duration: 0.4, ease: "power1.inOut" }, 1.6)
 
-        // --- TRANSITION 3: Card 03 (Gig Workers) -> Card 04 (Corporate Care) ---
-        // 1. Move to center and flip away Card 3 (0 -> 90deg, scale 1 -> 1.08)
-          .to(productTraveler, { x: 0, duration: 0.45, ease: "power1.in" }, 2.55)
-          .to(productFrame, { rotateY: 90, scale: 1.08, duration: 0.45, ease: "power1.in" }, 2.55)
-          // 2. Flip in and reveal Card 4 (-90 -> 0deg, scale 1.08 -> 1, move to -320)
-          .fromTo(productFrame,
-            { rotateY: -90, scale: 1.08 },
-            { rotateY: 0, scale: 1, duration: 0.45, ease: "power1.out", immediateRender: false },
-            3.0
-          )
-          .to(productTraveler, { x: -320, duration: 0.45, ease: "power1.out" }, 3.0)
-          .to(productTraveler, { x: -320, duration: 0.2 }, 3.45);
+        // --- TRANSITION 3: Card 03 (Gig Workers Yellow) -> Card 04 (Corporate Care Blue) ---
+        // Traveler glides right (+320) to left (-360) earlier so it is parked before Row 4 text reaches center
+          .to(productTraveler, { x: -360, duration: 0.9, ease: "power1.inOut" }, 2.15)
+          .to(img3, { opacity: 0, duration: 0.4, ease: "power1.inOut" }, 2.35)
+          .to(img4, { opacity: 1, duration: 0.4, ease: "power1.inOut" }, 2.35)
+          .to(productTraveler, { x: -360, duration: 0.4 }, 3.05);
       });
     }
 

@@ -1768,14 +1768,14 @@ div.btn-icon-link.theme-yellow:hover .btn-icon-content {
   overflow: visible;
   z-index: 25;
   padding-top: clamp(40px, 6vh, 80px);
-  padding-bottom: clamp(120px, 16vh, 200px);
+  padding-bottom: 0px;
 }
 
 .aqua-story__container {
   width: 100%;
   max-width: 1360px;
   margin: 0 auto;
-  padding: 40px clamp(48px, 6vw, 96px) 100px;
+  padding: 40px clamp(48px, 6vw, 96px) 20px;
   position: relative;
   box-sizing: border-box;
 }
@@ -1791,6 +1791,7 @@ div.btn-icon-link.theme-yellow:hover .btn-icon-content {
 }
 
 .aqua-story__row {
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -1801,8 +1802,36 @@ div.btn-icon-link.theme-yellow:hover .btn-icon-content {
   opacity: 1;
 }
 
+.aqua-story__row-bg {
+  position: absolute;
+  top: -40px;
+  bottom: -40px;
+  left: calc(50% - 50vw);
+  right: calc(50% - 50vw);
+  width: 100vw;
+  pointer-events: none;
+  overflow: hidden;
+  z-index: 0;
+  border-radius: 36px;
+}
+
+.aqua-story__row-bg-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center center;
+  filter: brightness(1.02) contrast(1.02);
+}
+
+.aqua-story__row-bg-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0.45) 0%, rgba(0, 0, 0, 0.1) 40%, rgba(0, 0, 0, 0.8) 85%, #000000 100%),
+              linear-gradient(90deg, rgba(0, 0, 0, 0.5) 0%, rgba(0, 0, 0, 0.1) 50%, rgba(0, 0, 0, 0.3) 100%);
+}
+
 .aqua-story__row:last-child {
-  padding-bottom: 140px;
+  padding-bottom: 20px;
 }
 
 .aqua-story__text-col {
@@ -1811,7 +1840,12 @@ div.btn-icon-link.theme-yellow:hover .btn-icon-content {
   display: flex;
   flex-direction: column;
   justify-content: center;
-  z-index: 2;
+  z-index: 5;
+}
+
+.aqua-story__row.is-text-right .aqua-story__text-col {
+  margin-left: auto;
+  max-width: 490px;
 }
 
 .aqua-story__card-col {
@@ -2018,6 +2052,7 @@ div.btn-icon-link.theme-yellow:hover .btn-icon-content {
 }
 
 /* Hero -> Section 2 Cinematic Transition Overlay */
+.usp__transition,
 .aqua-story__hero-transition {
   position: fixed;
   inset: 0;
@@ -2030,65 +2065,71 @@ div.btn-icon-link.theme-yellow:hover .btn-icon-content {
   will-change: opacity, visibility;
 }
 
+.usp__transition.is-active,
 .aqua-story__hero-transition.is-active {
   opacity: 1;
   visibility: visible;
 }
 
+.usp__transition-card,
 .aqua-story__hero-transition-card {
   position: absolute;
   left: 0;
   top: 0;
   width: 100vw;
   height: 100vh;
-  overflow: hidden;
+  overflow: visible;
   border-radius: 0;
-  clip-path: inset(0% 0% 0% 0% round 0px);
-  will-change: transform, width, height, clip-path, border-radius, opacity;
+  clip-path: none;
+  will-change: transform, width, height, opacity;
   transform: translate3d(0, 0, 0);
   transform-origin: top left;
   backface-visibility: hidden;
-  background: #000000;
-  border: 1px solid transparent;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
   box-sizing: border-box;
 }
 
+.usp__transition-img,
 .aqua-story__hero-transition-img {
   display: block;
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain !important;
   object-position: center;
+  filter: none !important;
   user-select: none;
   pointer-events: none;
 }
 
-/* Dedicated Square Cards for each Category */
+/* Dedicated Transparent Product Cards for each Category */
 .aqua-story__square-card {
   position: relative;
   width: 100%;
   max-width: 480px;
   aspect-ratio: 1 / 1;
-  border-radius: 24px;
-  overflow: hidden;
-  background: #080a09;
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  box-shadow: 0 35px 90px rgba(0, 0, 0, 0.95), 0 0 0 1px rgba(255, 255, 255, 0.05);
+  border-radius: 0;
+  overflow: visible;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
   transform: translateZ(0);
   will-change: transform, opacity;
-  transition: border-color 0.4s ease, box-shadow 0.4s ease;
+  transition: transform 0.4s ease;
 }
 
 .aqua-story__square-card:hover {
-  border-color: rgba(255, 255, 255, 0.28);
-  box-shadow: 0 40px 100px rgba(0, 0, 0, 0.98), 0 0 30px rgba(253, 235, 7, 0.08);
+  border-color: transparent !important;
+  box-shadow: none !important;
 }
 
 .aqua-story__square-img {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain !important;
   display: block;
+  filter: none !important;
   transition: transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
@@ -2096,43 +2137,14 @@ div.btn-icon-link.theme-yellow:hover .btn-icon-content {
   transform: scale(1.035);
 }
 
-.aqua-story__square-tag {
-  position: absolute;
-  top: 18px;
-  left: 18px;
-  z-index: 5;
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 7px 16px;
-  background: rgba(0, 0, 0, 0.72);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  border-radius: 100px;
-  font-family: monospace;
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.12em;
-  color: #FFE500;
-  text-transform: uppercase;
+.aqua-story__square-tag,
+.aqua-story__product-tag {
+  display: none !important;
 }
 
-.aqua-story__square-tag-dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: #FFE500;
-  box-shadow: 0 0 8px #FFE500;
-}
-
-.aqua-story__square-gloss {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  border-radius: 24px;
-  box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.2), inset 0 -20px 40px rgba(0, 0, 0, 0.6);
-  z-index: 6;
+.aqua-story__square-gloss,
+.aqua-story__product-glow {
+  display: none !important;
 }
 
 /* Horizontal Traveling AquaForce Product Stage (Desktop) */
@@ -2175,11 +2187,11 @@ div.btn-icon-link.theme-yellow:hover .btn-icon-content {
   position: relative;
   width: 100%;
   aspect-ratio: 4 / 4.8;
-  border-radius: 28px;
-  overflow: hidden;
-  background: #080a0c;
-  border: 1px solid rgba(255, 255, 255, 0.16);
-  box-shadow: 0 35px 100px rgba(0, 0, 0, 0.95), 0 0 40px rgba(255, 229, 0, 0.14);
+  border-radius: 0;
+  overflow: visible;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
   transform-style: preserve-3d;
   will-change: transform;
   backface-visibility: hidden;
@@ -2191,28 +2203,32 @@ div.btn-icon-link.theme-yellow:hover .btn-icon-content {
   left: 0;
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain !important;
   object-position: center center;
   display: block;
   opacity: 0;
-  transition: opacity 0.15s ease, transform 0.25s ease;
-  transform: scale(1.02);
-  backface-visibility: hidden;
+  filter: none !important;
+  will-change: opacity, transform;
 }
 
 .aqua-story__product-img.is-active {
   opacity: 1;
-  transform: scale(1);
   z-index: 1;
 }
 
+/* Normalize Blue Model scale to match Yellow Model proportions */
+.aqua-story__product-img[data-story-img="2"],
+.aqua-story__product-img[data-story-img="4"] {
+  transform: scale(0.93);
+}
+
+.aqua-story__row[data-story-row="2"] .aqua-story__square-img,
+.aqua-story__row[data-story-row="4"] .aqua-story__square-img {
+  transform: scale(0.91);
+}
+
 .aqua-story__product-glow {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  border-radius: 24px;
-  box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.2), inset 0 -20px 40px rgba(0, 0, 0, 0.7);
-  z-index: 2;
+  display: none !important;
 }
 
 /* Responsive Breakpoints */

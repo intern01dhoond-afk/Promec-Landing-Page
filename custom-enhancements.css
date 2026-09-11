@@ -2850,10 +2850,6 @@ div.btn-icon-link.theme-yellow:hover .btn-icon-content {
   animation-delay: -8s;
 }
 
-.aqua-testimonials__right:hover .aqua-testimonials__track {
-  animation-play-state: paused;
-}
-
 @keyframes aquaTestimonialScrollUp {
   0% {
     transform: translateY(0);
@@ -2869,13 +2865,12 @@ div.btn-icon-link.theme-yellow:hover .btn-icon-content {
   border-radius: 16px;
   padding: 24px;
   box-shadow: 0 4px 16px rgba(16, 24, 40, 0.03);
-  transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
+  transition: box-shadow 0.3s ease, border-color 0.3s ease;
 }
 
 .aqua-testimonials__card:hover {
-  transform: translateY(-4px);
   border-color: #d0d5dd;
-  box-shadow: 0 12px 28px rgba(16, 24, 40, 0.08);
+  box-shadow: 0 8px 24px rgba(16, 24, 40, 0.06);
 }
 
 .aqua-testimonials__author {
@@ -3142,7 +3137,7 @@ div.btn-icon-link.theme-yellow:hover .btn-icon-content {
   z-index: 1 !important;
   background-color: #050608;
   color: #ffffff;
-  padding: 40px 32px 40px !important;
+  padding: 64px 32px 32px !important;
   font-family: 'Geist', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   box-sizing: border-box;
 }
@@ -3152,7 +3147,7 @@ div.btn-icon-link.theme-yellow:hover .btn-icon-content {
     margin-bottom: -120px !important;
   }
   .aqua-footer {
-    padding: 24px 20px 32px !important;
+    padding: 48px 20px 24px !important;
   }
 }
 
@@ -3160,16 +3155,6 @@ div.btn-icon-link.theme-yellow:hover .btn-icon-content {
   max-width: 1320px;
   margin: 0 auto;
   width: 100%;
-}
-
-/* Elevated Dark Card Container */
-.aqua-footer__card {
-  background-color: #0e1117;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 20px;
-  padding: 56px 56px 64px;
-  margin-bottom: 32px;
-  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4);
 }
 
 .aqua-footer__grid {
@@ -3268,7 +3253,9 @@ div.btn-icon-link.theme-yellow:hover .btn-icon-content {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 8px;
+  padding-top: 32px;
+  margin-top: 48px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
   font-size: 14px;
   color: #64748b;
 }
@@ -3295,9 +3282,6 @@ div.btn-icon-link.theme-yellow:hover .btn-icon-content {
 
 /* Responsive Breakpoints */
 @media (max-width: 1024px) {
-  .aqua-footer__card {
-    padding: 40px 40px 48px;
-  }
   .aqua-footer__grid {
     grid-template-columns: 1fr 1fr;
     gap: 40px;
@@ -3311,11 +3295,7 @@ div.btn-icon-link.theme-yellow:hover .btn-icon-content {
 
 @media (max-width: 640px) {
   .aqua-footer {
-    padding: 40px 16px 32px;
-  }
-  .aqua-footer__card {
-    padding: 32px 24px 36px;
-    border-radius: 16px;
+    padding: 40px 16px 24px !important;
   }
   .aqua-footer__grid {
     grid-template-columns: 1fr;
@@ -3328,7 +3308,8 @@ div.btn-icon-link.theme-yellow:hover .btn-icon-content {
     flex-direction: column;
     gap: 16px;
     align-items: flex-start;
-    padding: 0;
+    padding-top: 24px;
+    margin-top: 36px;
   }
 }
 

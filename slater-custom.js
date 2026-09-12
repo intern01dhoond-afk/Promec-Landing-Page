@@ -95,18 +95,16 @@ function prepareHeroBeforeEnter(scope = nextPage) {
       if (canvas) gsap.set(canvas, { autoAlpha: 0 });
     }
 
-    [content, visualCol].filter(Boolean).forEach((el) => {
-      gsap.set(el, { autoAlpha: 1, y: 0 });
-    });
+    if (content) gsap.set(content, { autoAlpha: 1, y: 0 });
+    if (visualCol) gsap.set(visualCol, { autoAlpha: 1, y: 0 });
 
     if (nav) gsap.set(nav, { autoAlpha: 1, y: "0%" });
   } else {
     if (videoLayer) gsap.set(videoLayer, { autoAlpha: 1 });
     if (canvas) gsap.set(canvas, { autoAlpha: 0 });
 
-    [content, visualCol].filter(Boolean).forEach((el) => {
-      gsap.set(el, { autoAlpha: 0, y: "1em" });
-    });
+    if (content) gsap.set(content, { autoAlpha: 0, y: "1em" });
+    if (visualCol) gsap.set(visualCol, { autoAlpha: 1, y: 0 });
 
     if (nav) gsap.set(nav, { autoAlpha: 1, y: "0%" });
   }

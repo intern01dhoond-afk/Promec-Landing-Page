@@ -106,7 +106,7 @@ section.theme-dark {
   width: 100% !important;
   height: 100vh !important;
   overflow: hidden !important;
-  background-color: #111110 !important;
+  background-color: #000000 !important;
 }
 
 .hero__sticky {
@@ -147,6 +147,8 @@ section.theme-dark {
   position: absolute !important;
   inset: 0 !important;
   pointer-events: none !important;
+  opacity: 1 !important;
+  visibility: visible !important;
 }
 
 .hero__overlay a,
@@ -158,8 +160,8 @@ section.theme-dark {
 .hero__fade {
   position: absolute !important;
   inset: 0 !important;
-  background: radial-gradient(circle at center, transparent 40%, rgba(17, 17, 16, 0.6) 100%),
-              linear-gradient(to bottom, rgba(17, 17, 16, 0.3) 0%, transparent 25%, transparent 70%, rgba(17, 17, 16, 0.8) 100%) !important;
+  background: radial-gradient(circle at center, transparent 45%, rgba(0, 0, 0, 0.4) 100%),
+              linear-gradient(to bottom, rgba(0, 0, 0, 0.3) 0%, transparent 25%, transparent 85%, rgba(0, 0, 0, 0.3) 100%) !important;
   z-index: 3 !important;
   pointer-events: none !important;
   display: block !important;
@@ -171,6 +173,40 @@ section.theme-dark {
   color: #f5f3ef !important;
   opacity: 1 !important;
 }
+
+.hero-overlay__grid,
+.hero-overlay__grid[data-fouc] {
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+
+/* Ensure hero release video thumbnail widget stays 100% visible and pinned throughout Hero section */
+@media (min-width: 992px) {
+  .home-hero__video,
+  .mini-showreel,
+  .mini-showreel__card {
+    display: flex !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+    z-index: 10 !important;
+    pointer-events: auto !important;
+  }
+}
+
+
+.mini-showreel .cover-placeholder,
+.mini-showreel .cover-image {
+  display: none !important;
+}
+
+.mini-showreel .cover-video,
+.mini-showreel .bunny-player__video {
+  display: block !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+  object-fit: cover !important;
+}
+
 
 /* -----------------------------------------
    PROMEC BRANDED NAVBAR & ON SCROLL STYLES
@@ -1767,7 +1803,7 @@ div.btn-icon-link.theme-yellow:hover .btn-icon-content {
   color: #f5f5f7;
   overflow: visible;
   z-index: 25;
-  padding-top: clamp(40px, 6vh, 80px);
+  padding-top: 0px !important;
   padding-bottom: 0px;
 }
 
@@ -1775,18 +1811,18 @@ div.btn-icon-link.theme-yellow:hover .btn-icon-content {
   width: 100%;
   max-width: 1360px;
   margin: 0 auto;
-  padding: 40px clamp(48px, 6vw, 96px) 20px;
+  padding: 0 clamp(48px, 6vw, 96px);
   position: relative;
   box-sizing: border-box;
 }
 
-/* Alternating Rows Flow Track */
+/* Alternating Rows Flow Track - Zero Gap for Seamless Video Continuation */
 .aqua-story__rows-track {
   position: relative;
   width: 100%;
   display: flex;
   flex-direction: column;
-  gap: clamp(60px, 10vh, 120px);
+  gap: 0 !important;
   z-index: 2;
 }
 
@@ -1796,42 +1832,56 @@ div.btn-icon-link.theme-yellow:hover .btn-icon-content {
   align-items: center;
   justify-content: space-between;
   gap: clamp(32px, 6vw, 80px);
-  min-height: 85vh;
-  padding: 60px 0;
+  min-height: 100vh !important;
+  padding: 80px 0;
   box-sizing: border-box;
   opacity: 1;
 }
 
 .aqua-story__row-bg {
   position: absolute;
-  top: -40px;
-  bottom: -40px;
+  top: -4px;
+  bottom: -4px;
   left: calc(50% - 50vw);
   right: calc(50% - 50vw);
   width: 100vw;
   pointer-events: none;
   overflow: hidden;
   z-index: 0;
-  border-radius: 36px;
+  border-radius: 0 !important;
 }
 
 .aqua-story__row-bg-img {
+  display: none !important;
+}
+
+.aqua-story__row-bg-video {
+  position: absolute;
+  top: 0;
+  left: 0;
   width: 100%;
   height: 100%;
   object-fit: cover;
   object-position: center center;
-  filter: brightness(1.02) contrast(1.02);
+  opacity: 1 !important;
+  z-index: 1;
+  pointer-events: none;
 }
 
 .aqua-story__row-bg-overlay {
   position: absolute;
   inset: 0;
-  background: linear-gradient(180deg, rgba(0, 0, 0, 0.45) 0%, rgba(0, 0, 0, 0.1) 40%, rgba(0, 0, 0, 0.8) 85%, #000000 100%),
-              linear-gradient(90deg, rgba(0, 0, 0, 0.5) 0%, rgba(0, 0, 0, 0.1) 50%, rgba(0, 0, 0, 0.3) 100%);
+  background: 
+    linear-gradient(180deg, rgba(0, 0, 0, 0.8) 0%, rgba(0, 0, 0, 0.15) 25%, rgba(0, 0, 0, 0.15) 70%, rgba(0, 0, 0, 0.9) 100%),
+    linear-gradient(90deg, rgba(0, 0, 0, 0.35) 0%, transparent 15%, transparent 85%, rgba(0, 0, 0, 0.35) 100%),
+    radial-gradient(ellipse at center, rgba(0, 0, 0, 0) 50%, rgba(0, 0, 0, 0.45) 100%);
+  z-index: 2;
+  pointer-events: none;
+  border-radius: 0 !important;
 }
 
 .aqua-story__row:last-child {
-  padding-bottom: 20px;
+  padding-bottom: 40px;
 }
 
 .aqua-story__text-col {
@@ -1840,12 +1890,32 @@ div.btn-icon-link.theme-yellow:hover .btn-icon-content {
   display: flex;
   flex-direction: column;
   justify-content: center;
+  padding: 36px 40px;
+  background: transparent !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  border-radius: 0 !important;
+  border: none !important;
+  box-shadow: none !important;
+  position: relative;
   z-index: 5;
+}
+
+.aqua-story__text-col::before {
+  content: "";
+  position: absolute;
+  inset: -60px -80px;
+  background: radial-gradient(ellipse at center, rgba(0, 0, 0, 0.88) 0%, rgba(0, 0, 0, 0.55) 45%, rgba(0, 0, 0, 0.15) 70%, transparent 100%);
+  filter: blur(25px);
+  -webkit-filter: blur(25px);
+  pointer-events: none;
+  z-index: -1;
+  border-radius: 50%;
 }
 
 .aqua-story__row.is-text-right .aqua-story__text-col {
   margin-left: auto;
-  max-width: 490px;
+  max-width: 520px;
 }
 
 .aqua-story__card-col {
@@ -2054,6 +2124,7 @@ div.btn-icon-link.theme-yellow:hover .btn-icon-content {
 /* Hero -> Section 2 Cinematic Transition Overlay */
 .usp__transition,
 .aqua-story__hero-transition {
+  display: none !important;
   position: fixed;
   inset: 0;
   width: 100vw;
@@ -3126,10 +3197,10 @@ div.btn-icon-link.theme-yellow:hover .btn-icon-content {
 .aqua-cta-banner {
   position: relative !important;
   z-index: 10 !important;
-  margin-bottom: -180px !important;
+  margin-bottom: 0 !important;
   will-change: transform;
   transform: translate3d(0, 0, 0);
-  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.7);
+  box-shadow: none !important;
 }
 
 .aqua-footer {
@@ -3144,7 +3215,7 @@ div.btn-icon-link.theme-yellow:hover .btn-icon-content {
 
 @media (max-width: 768px) {
   .aqua-cta-banner {
-    margin-bottom: -120px !important;
+    margin-bottom: 0 !important;
   }
   .aqua-footer {
     padding: 48px 20px 24px !important;
@@ -3459,6 +3530,264 @@ a, button, input[type="submit"], input[type="button"], [role="button"],
 
 .aqua-story__cta-btn:hover .aqua-story__cta-arrow {
   transform: translateX(4px) !important;
+}
+
+/* =========================================================================
+   23. COMPREHENSIVE MOBILE RESPONSIVE OPTIMIZATION (SCREENS <= 768PX & <= 480PX)
+   ========================================================================= */
+
+/* Prevent horizontal page overflow */
+html, body {
+  overflow-x: hidden !important;
+  max-width: 100vw !important;
+  width: 100% !important;
+}
+
+.page-wrapper, .main-wrapper {
+  overflow-x: hidden !important;
+  width: 100% !important;
+  max-width: 100vw !important;
+}
+
+/* Scroll padding for sticky navbar so section titles don't clip behind header */
+section, [id] {
+  scroll-margin-top: 80px !important;
+}
+
+@media (max-width: 768px) {
+  
+  /* ---------------- HERO SECTION MOBILE FIXES ---------------- */
+  .hero.theme-dark {
+    min-height: 100vh !important;
+    padding-top: 70px !important;
+  }
+
+  .home-hero__header {
+    padding: 0 16px !important;
+    z-index: 10 !important;
+  }
+
+  .home-hero__header .heading-xl {
+    font-size: 2.2rem !important;
+    line-height: 1.15 !important;
+    margin-bottom: 12px !important;
+    letter-spacing: -0.02em !important;
+  }
+
+  .home-hero__header .paragraph-m {
+    font-size: 0.95rem !important;
+    line-height: 1.5 !important;
+    margin-bottom: 20px !important;
+    max-width: 100% !important;
+  }
+
+  .home-hero__header .eyebrow-style {
+    font-size: 0.75rem !important;
+    margin-bottom: 8px !important;
+    letter-spacing: 0.15em !important;
+  }
+
+  /* Fix hero button group on mobile */
+  .btn-group {
+    display: flex !important;
+    flex-direction: row !important;
+    gap: 10px !important;
+    align-items: center !important;
+    width: 100% !important;
+    justify-content: flex-start !important;
+  }
+
+  .btn-icon-link {
+    padding: 10px 16px !important;
+    font-size: 11px !important;
+  }
+
+  /* Prevent scrolldown indicator from overlapping buttons on mobile */
+  .scrolldown-indicator {
+    display: none !important;
+  }
+
+  /* Hide hero release video thumbnail on mobile so hero image is completely clean */
+  .home-hero__video,
+  .mini-showreel {
+    display: none !important;
+  }
+
+  /* ---------------- SECTION 2: OVERVIEW MOBILE FIXES ---------------- */
+  .aqua-story {
+    padding: 50px 20px !important;
+  }
+
+  .aqua-story__heading {
+    font-size: 2rem !important;
+    line-height: 1.2 !important;
+    margin-bottom: 16px !important;
+  }
+
+  .aqua-story__desc {
+    font-size: 0.95rem !important;
+    line-height: 1.6 !important;
+  }
+
+  .aqua-story__image-wrap {
+    height: 320px !important;
+    border-radius: 16px !important;
+  }
+
+  .aqua-story__grid {
+    grid-template-columns: 1fr !important;
+    gap: 32px !important;
+  }
+
+  /* ---------------- SECTION 3: SOLUTIONS SHOWCASE MOBILE FIXES ---------------- */
+  .aqua-showcase {
+    padding: 50px 16px !important;
+  }
+
+  .aqua-showcase__heading {
+    font-size: 1.8rem !important;
+    line-height: 1.25 !important;
+    padding: 0 8px !important;
+  }
+
+  .aqua-showcase__card {
+    height: 420px !important;
+    border-radius: 16px !important;
+  }
+
+  .aqua-showcase__content {
+    padding: 24px 20px !important;
+  }
+
+  .aqua-showcase__card-title {
+    font-size: 1.4rem !important;
+  }
+
+  .aqua-showcase__card-desc {
+    font-size: 0.9rem !important;
+  }
+
+  /* ---------------- SECTION 4: ENGINEERING MOBILE FIXES ---------------- */
+  .aqua-engineering {
+    padding: 50px 0 !important;
+    overflow-x: hidden !important;
+  }
+
+  .aqua-engineering__container {
+    padding: 0 20px !important;
+  }
+
+  .aqua-engineering__grid {
+    grid-template-columns: 1fr !important;
+    gap: 24px !important;
+  }
+
+  .aqua-engineering__heading {
+    font-size: 2rem !important;
+    line-height: 1.2 !important;
+  }
+
+  .aqua-engineering__right {
+    grid-template-columns: 1fr !important;
+    gap: 16px !important;
+  }
+
+  .aqua-engineering__text-col p {
+    font-size: 0.95rem !important;
+    line-height: 1.6 !important;
+  }
+
+  .aqua-engineering__card {
+    width: 240px !important;
+    height: 160px !important;
+  }
+
+  /* ---------------- SECTION 5: TESTIMONIALS MOBILE FIXES ---------------- */
+  .aqua-testimonials {
+    padding: 60px 16px !important;
+  }
+
+  .aqua-testimonials__container {
+    grid-template-columns: 1fr !important;
+    gap: 36px !important;
+  }
+
+  .aqua-testimonials__heading {
+    font-size: 2.2rem !important;
+    line-height: 1.2 !important;
+    margin-bottom: 12px !important;
+  }
+
+  .aqua-testimonials__desc {
+    font-size: 0.95rem !important;
+    margin-bottom: 24px !important;
+  }
+
+  .aqua-testimonials__right {
+    height: 480px !important;
+  }
+
+  .aqua-testimonials__marquee-wrap {
+    grid-template-columns: 1fr !important;
+  }
+
+  .aqua-testimonials__track--down {
+    display: none !important;
+  }
+
+  /* ---------------- SECTION 6: CTA BANNER MOBILE FIXES ---------------- */
+  .aqua-cta-banner {
+    padding: 40px 16px !important;
+  }
+
+  .aqua-cta-banner__container {
+    padding: 36px 20px !important;
+    border-radius: 20px !important;
+  }
+
+  .aqua-cta-banner__title {
+    font-size: 2.2rem !important;
+    line-height: 1.15 !important;
+  }
+
+  .aqua-cta-banner__desc {
+    font-size: 0.95rem !important;
+  }
+
+  .aqua-cta-banner__btn-wrap {
+    flex-direction: column !important;
+    width: 100% !important;
+    gap: 12px !important;
+  }
+
+  .aqua-cta-banner__btn {
+    width: 100% !important;
+    justify-content: center !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .home-hero__header .heading-xl {
+    font-size: 1.85rem !important;
+  }
+
+  .btn-group {
+    flex-direction: column !important;
+    align-items: stretch !important;
+  }
+
+  .btn-icon-link {
+    width: 100% !important;
+    justify-content: center !important;
+  }
+
+  .aqua-showcase__card {
+    height: 380px !important;
+  }
+
+  .aqua-testimonials__card {
+    padding: 18px !important;
+  }
 }
 
 

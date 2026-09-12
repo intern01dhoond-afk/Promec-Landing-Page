@@ -609,12 +609,27 @@ document.addEventListener("DOMContentLoaded", () => {
   frame0.onload = () => {
     heroFrames[0] = frame0;
     currentHeroFrameObj = frame0;
-    if (heroCanvas) {
-      gsap.set(heroCanvas, { autoAlpha: 1, visibility: "visible" });
-    }
     const heroVideoWrapper = document.querySelector(".hero__video");
-    if (heroVideoWrapper) {
-      gsap.set(heroVideoWrapper, { autoAlpha: 0, visibility: "hidden" });
+    if (heroContent) {
+      gsap.set(heroContent, { autoAlpha: 1, visibility: "visible" });
+    }
+    if (window.scrollY === 0) {
+      if (heroVideoWrapper) {
+        gsap.set(heroVideoWrapper, { autoAlpha: 1, visibility: "visible" });
+      }
+      if (heroCanvas) {
+        gsap.set(heroCanvas, { autoAlpha: 0, visibility: "hidden" });
+      }
+      if (heroVideo && heroVideo.paused) {
+        heroVideo.play().catch(() => {});
+      }
+    } else {
+      if (heroCanvas) {
+        gsap.set(heroCanvas, { autoAlpha: 1, visibility: "visible" });
+      }
+      if (heroVideoWrapper) {
+        gsap.set(heroVideoWrapper, { autoAlpha: 0, visibility: "hidden" });
+      }
     }
     resizeHeroCanvas();
     drawHeroCanvasFrame(frame0);
@@ -674,17 +689,20 @@ document.addEventListener("DOMContentLoaded", () => {
       const progress = Math.max(0, Math.min(1, self.progress));
       const frameIdx = Math.min(totalHeroFrames - 1, Math.floor(progress * totalHeroFrames));
 
-      if (heroCanvas) {
-        gsap.set(heroCanvas, { autoAlpha: 1, visibility: "visible" });
-      }
       const heroVideoWrapper = document.querySelector(".hero__video");
-      if (heroVideoWrapper) {
-        gsap.set(heroVideoWrapper, { autoAlpha: 0, visibility: "hidden" });
-      }
 
-      // Pause background video loop to avoid competing for hardware video decoder
-      if (heroVideo && !heroVideo.paused) {
-        heroVideo.pause();
+      if (progress <= 0.01) {
+        if (heroCanvas) gsap.set(heroCanvas, { autoAlpha: 0, visibility: "hidden" });
+        if (heroVideoWrapper) gsap.set(heroVideoWrapper, { autoAlpha: 1, visibility: "visible" });
+        if (heroVideo && heroVideo.paused) {
+          heroVideo.play().catch(() => {});
+        }
+      } else {
+        if (heroCanvas) gsap.set(heroCanvas, { autoAlpha: 1, visibility: "visible" });
+        if (heroVideoWrapper) gsap.set(heroVideoWrapper, { autoAlpha: 0, visibility: "hidden" });
+        if (heroVideo && !heroVideo.paused) {
+          heroVideo.pause();
+        }
       }
 
       // 1. Draw 1080p canvas frame
@@ -695,13 +713,23 @@ document.addEventListener("DOMContentLoaded", () => {
         drawHeroCanvasFrame(img);
       }
 
-      // 2. Fade out overlay content during initial 22% of rotation
-      if (heroContent) {
+      // 2. Fade out header typography during initial 22% of rotation, keeping bottom-right video card visible
+      const heroHeaderEl = document.querySelector(".home-hero__header");
+      const heroVideoWidgetEl = document.querySelector(".home-hero__video");
+
+      if (heroHeaderEl) {
         const fadeProgress = Math.max(0, Math.min(1, progress / 0.22));
-        gsap.set(heroContent, {
+        gsap.set(heroHeaderEl, {
           opacity: 1 - fadeProgress,
           y: -30 * fadeProgress,
           pointerEvents: fadeProgress > 0.5 ? "none" : "auto"
+        });
+      }
+
+      if (heroVideoWidgetEl) {
+        gsap.set(heroVideoWidgetEl, {
+          opacity: 1,
+          pointerEvents: "auto"
         });
       }
     },
@@ -712,8 +740,9 @@ document.addEventListener("DOMContentLoaded", () => {
         currentHeroFrameObj = lastImg;
         drawHeroCanvasFrame(lastImg);
       }
-      if (heroContent) {
-        gsap.set(heroContent, { opacity: 0, pointerEvents: "none" });
+      const heroHeaderEl = document.querySelector(".home-hero__header");
+      if (heroHeaderEl) {
+        gsap.set(heroHeaderEl, { opacity: 0, pointerEvents: "none" });
       }
     }
   });
@@ -792,6 +821,19 @@ document.addEventListener("DOMContentLoaded", () => {
       if (storyTagText && categoryTagLabels[index]) {
         storyTagText.textContent = categoryTagLabels[index];
       }
+
+      // Automatically play video for active category row
+      storyRows.forEach((r, i) => {
+        const video = r.querySelector(".aqua-story__row-bg-video");
+        if (video) {
+          if (i === index) {
+            gsap.to(video, { opacity: 1, duration: 0.5 });
+            if (video.paused) {
+              video.play().catch(() => {});
+            }
+          }
+        }
+      });
     }
 
     // Smooth horizontal travel for desktop view
@@ -799,6 +841,33 @@ document.addEventListener("DOMContentLoaded", () => {
 
       const mm = gsap.matchMedia();
       mm.add("(min-width: 992px)", () => {
+        // 10A-0. REVEAL SECTION 2 FROM BEHIND HERO VIDEO ON SCROLL
+        ScrollTrigger.create({
+          trigger: storySection,
+          start: "top bottom",
+          end: "top top",
+          scrub: 0.5,
+          onUpdate: (self) => {
+            const p = self.progress;
+            if (heroSection) {
+              gsap.set(heroSection, { yPercent: -25 * p, opacity: 1 - 0.35 * p });
+            }
+            gsap.set(storySection, {
+              scale: 0.93 + 0.07 * p,
+              opacity: 0.7 + 0.3 * p,
+              transformOrigin: "center top"
+            });
+          },
+          onLeave: () => {
+            if (heroSection) gsap.set(heroSection, { yPercent: 0, opacity: 1 });
+            gsap.set(storySection, { scale: 1, opacity: 1 });
+          },
+          onLeaveBack: () => {
+            if (heroSection) gsap.set(heroSection, { yPercent: 0, opacity: 1 });
+            gsap.set(storySection, { scale: 0.93, opacity: 0.7 });
+          }
+        });
+
         // Pin stage within story section without locking page scrolling
         ScrollTrigger.create({
           trigger: storySection,
@@ -809,16 +878,22 @@ document.addEventListener("DOMContentLoaded", () => {
           invalidateOnRefresh: true
         });
 
-        // 10A-1. CINEMATIC HERO -> SECTION 2 PULL-BACK MASK HANDOFF
+        // 10A-1. CINEMATIC HERO -> SECTION 2 EXACT 2-STAGE SCROLL CHOREOGRAPHY
         const uspTransition = document.querySelector("[data-usp-transition]");
         const uspCard = uspTransition ? uspTransition.querySelector("[data-usp-transition-card]") : null;
         const uspImg = uspTransition ? uspTransition.querySelector("[data-usp-transition-img]") : null;
         const heroCanvasEl = document.querySelector(".hero__canvas");
         const heroFadeEl = document.querySelector(".hero__fade");
+        const row1El = storySection.querySelector('[data-story-row="1"]');
+        const row1Video = storySection.querySelector('[data-story-video="1"]');
         const card1TextCol = storyRows[0] ? storyRows[0].querySelector(".aqua-story__text-col") : null;
 
         if (uspImg) {
           uspImg.src = "assets/promec_yellow_model.png";
+        }
+
+        if (row1Video) {
+          row1Video.load();
         }
 
         // Initially hide product stage until handoff reaches Section 2
@@ -829,116 +904,84 @@ document.addEventListener("DOMContentLoaded", () => {
         if (uspTransition) {
           gsap.set(uspTransition, { autoAlpha: 0 });
         }
-
-        function getEndRect() {
-          const travelerWidth = Math.min(440, Math.max(320, window.innerWidth * 0.28));
-          const travelerHeight = travelerWidth * 1.2;
-          const x = window.innerWidth / 2 + 320 - travelerWidth / 2;
-          const y = (window.innerHeight - travelerHeight) / 2;
-          return {
-            x,
-            y,
-            width: travelerWidth,
-            height: travelerHeight,
-            radius: 28
-          };
+        if (row1Video) {
+          gsap.set(row1Video, { opacity: 0 });
         }
 
         function getStartRect() {
-          return {
-            x: 0,
-            y: 0,
-            width: window.innerWidth,
-            height: window.innerHeight,
-            radius: 0
-          };
+          const w = Math.min(680, Math.max(460, window.innerWidth * 0.46));
+          const h = w * 1.15;
+          const x = (window.innerWidth - w) / 2;
+          const y = -h * 0.35; // Originates from the top of the viewport coming from Hero
+          return { x, y, width: w, height: h };
         }
 
-        if (uspTransition && uspCard) {
-          ScrollTrigger.create({
-            trigger: storySection,
-            start: "top bottom",
-            end: "top top",
-            scrub: 0.4,
-            invalidateOnRefresh: true,
-            onUpdate: (self) => {
-              const p = self.progress;
+        function getEndRect() {
+          if (window.innerWidth < 992) {
+            const w = Math.min(320, Math.max(240, window.innerWidth * 0.68));
+            const h = w * 1.18;
+            const x = (window.innerWidth - w) / 2;
+            const y = window.innerHeight * 0.25;
+            return { x, y, width: w, height: h };
+          }
 
-              if (p <= 0.005) {
-                gsap.set(uspTransition, { autoAlpha: 0 });
-                if (heroCanvasEl) gsap.set(heroCanvasEl, { autoAlpha: 1 });
-                if (heroFadeEl) gsap.set(heroFadeEl, { autoAlpha: 1 });
-                gsap.set(productStage, { autoAlpha: 0 });
-                return;
-              }
+          const winW = window.innerWidth;
+          const winH = window.innerHeight;
+          const videoNativeW = 1920;
+          const videoNativeH = 1080;
+          const videoAspect = videoNativeW / videoNativeH;
+          const containerAspect = winW / winH;
 
-              if (p >= 0.995) {
-                gsap.set(uspTransition, { autoAlpha: 0 });
-                if (heroCanvasEl) gsap.set(heroCanvasEl, { autoAlpha: 0 });
-                if (heroFadeEl) gsap.set(heroFadeEl, { autoAlpha: 0 });
-                gsap.set(productStage, { autoAlpha: 1 });
-                if (card1TextCol) gsap.set(card1TextCol, { opacity: 1, y: 0 });
-                return;
-              }
+          let renderW, renderH, offsetX, offsetY;
 
-              // Active handoff zone
-              gsap.set(uspTransition, { autoAlpha: 1 });
-              gsap.set(productStage, { autoAlpha: 0 });
+          if (containerAspect > videoAspect) {
+            renderW = winW;
+            renderH = winW / videoAspect;
+            offsetX = 0;
+            offsetY = (winH - renderH) / 2;
+          } else {
+            renderH = winH;
+            renderW = winH * videoAspect;
+            offsetX = (winW - renderW) / 2;
+            offsetY = 0;
+          }
 
-              // Fade hero canvas behind transition overlay
-              if (p < 0.1) {
-                const cAlpha = 1 - (p / 0.1);
-                if (heroCanvasEl) gsap.set(heroCanvasEl, { autoAlpha: cAlpha });
-                if (heroFadeEl) gsap.set(heroFadeEl, { autoAlpha: cAlpha });
-              } else {
-                if (heroCanvasEl) gsap.set(heroCanvasEl, { autoAlpha: 0 });
-                if (heroFadeEl) gsap.set(heroFadeEl, { autoAlpha: 0 });
-              }
+          const normX = 1255 / 1920;
+          const normY = 210 / 1080;
+          const normW = 530 / 1920;
+          const normH = 620 / 1080;
 
-              const start = getStartRect();
-              const end = getEndRect();
-              const ep = gsap.parseEase("power1.inOut")(p);
+          const x = offsetX + normX * renderW;
+          const y = offsetY + normY * renderH;
+          const w = normW * renderW;
+          const h = normH * renderH;
 
-              const curX = gsap.utils.interpolate(start.x, end.x, ep);
-              const curY = gsap.utils.interpolate(start.y, end.y, ep);
-              const curW = gsap.utils.interpolate(start.width, end.width, ep);
-              const curH = gsap.utils.interpolate(start.height, end.height, ep);
-              const curR = gsap.utils.interpolate(start.radius, end.radius, ep);
+          return { x, y, width: w, height: h };
+        }
 
-              gsap.set(uspCard, {
-                x: curX,
-                y: curY,
-                width: curW,
-                height: curH,
-                borderRadius: curR,
-                clipPath: `inset(0% 0% 0% 0% round ${curR}px)`,
-                boxShadow: "none",
-                border: "none",
-                force3D: true
-              });
-
-              if (card1TextCol) {
-                gsap.set(card1TextCol, {
-                  opacity: gsap.utils.clamp(0, 1, (p - 0.3) / 0.7),
-                  y: (1 - ep) * 45
-                });
-              }
-            },
-            onLeaveBack: () => {
-              gsap.set(uspTransition, { autoAlpha: 0 });
-              if (heroCanvasEl) gsap.set(heroCanvasEl, { autoAlpha: 1 });
-              if (heroFadeEl) gsap.set(heroFadeEl, { autoAlpha: 1 });
-              gsap.set(productStage, { autoAlpha: 0 });
-            },
-            onLeave: () => {
-              gsap.set(uspTransition, { autoAlpha: 0 });
-              if (heroCanvasEl) gsap.set(heroCanvasEl, { autoAlpha: 0 });
-              if (heroFadeEl) gsap.set(heroFadeEl, { autoAlpha: 0 });
-              gsap.set(productStage, { autoAlpha: 1 });
-              if (card1TextCol) gsap.set(card1TextCol, { opacity: 1, y: 0 });
+        // Single master ScrollTrigger for Section 2 Row 1 Choreography (Single Scroll without extra pinning)
+        ScrollTrigger.create({
+          trigger: row1El || storySection,
+          start: "top 80%",
+          end: "bottom top",
+          onEnter: () => {
+            if (uspTransition) gsap.set(uspTransition, { autoAlpha: 0, display: "none" });
+            if (heroCanvasEl) gsap.set(heroCanvasEl, { autoAlpha: 0 });
+            if (heroFadeEl) gsap.set(heroFadeEl, { autoAlpha: 0 });
+            if (card1TextCol) gsap.set(card1TextCol, { opacity: 1, y: 0 });
+            if (row1Video) {
+              gsap.set(row1Video, { opacity: 1 });
+              if (row1Video.paused) row1Video.play().catch(() => {});
             }
-          });
-        }
+          },
+          onEnterBack: () => {
+            if (card1TextCol) gsap.set(card1TextCol, { opacity: 1, y: 0 });
+            if (row1Video) {
+              gsap.set(row1Video, { opacity: 1 });
+              if (row1Video.paused) row1Video.play().catch(() => {});
+            }
+          }
+        });
 
         const productFrame = productTraveler.querySelector(".aqua-story__product-frame");
 
@@ -1009,6 +1052,27 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Subtle scroll reveal for each row content as the user navigates down
     storyRows.forEach((row, idx) => {
+      const rowVideo = row.querySelector(".aqua-story__row-bg-video");
+      if (rowVideo) {
+        rowVideo.muted = true;
+        rowVideo.playsInline = true;
+        rowVideo.load();
+
+        ScrollTrigger.create({
+          trigger: row,
+          start: "top 80%",
+          end: "bottom 20%",
+          onEnter: () => {
+            gsap.to(rowVideo, { opacity: 1, duration: 0.6 });
+            if (rowVideo.paused) rowVideo.play().catch(() => {});
+          },
+          onEnterBack: () => {
+            gsap.to(rowVideo, { opacity: 1, duration: 0.6 });
+            if (rowVideo.paused) rowVideo.play().catch(() => {});
+          }
+        });
+      }
+
       ScrollTrigger.create({
         trigger: row,
         start: "top 65%",
@@ -1416,7 +1480,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const timelineProgress = lightbox ? lightbox.querySelector("[data-player-progress]") : null;
   const timelineBar = lightbox ? lightbox.querySelector(".bunny-lightbox-player__timeline") : null;
 
-  const RELEASE_VIDEO_SRC = "https://uncommon.b-cdn.net/Radian%20-%20hero%20cinematisch.mp4";
+  const RELEASE_VIDEO_SRC = "assets/ASMR%20PROMEC%20LAPTOP.mp4";
 
   function openLightbox() {
     if (!lightbox || !lightboxVideo) return;

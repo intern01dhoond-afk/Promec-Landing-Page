@@ -20,14 +20,20 @@ export const MenuItem = ({
   item,
   children,
 }: {
-  setActive: (item: string) => void;
+  setActive: (item: string | null) => void;
   active: string | null;
   item: string;
   children?: React.ReactNode;
 }) => {
+  const isSelected = active === item;
+
   return (
     <div
       onMouseEnter={() => setActive(item)}
+      onClick={(e) => {
+        e.stopPropagation();
+        setActive(isSelected ? null : item);
+      }}
       style={{ position: 'relative', display: 'inline-block' }}
       className="relative"
     >
@@ -41,42 +47,72 @@ export const MenuItem = ({
           fontFamily: 'var(--_fonts---fonts--heading, "Geist", Arial, sans-serif)',
           fontSize: '14px',
           fontWeight: 500,
-          color: active === item ? '#ffffff' : 'rgba(255, 255, 255, 0.8)',
-          transition: 'color 0.25s ease'
+          color: isSelected ? '#ffffff' : 'rgba(255, 255, 255, 0.8)',
+          transition: 'color 0.25s ease',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '6px'
         }}
       >
-        {item}
+        <span>{item}</span>
+        <svg
+          width="10"
+          height="6"
+          viewBox="0 0 10 6"
+          fill="none"
+          style={{
+            transform: isSelected ? 'rotate(180deg)' : 'rotate(0deg)',
+            transition: 'transform 0.25s ease',
+            opacity: 0.85
+          }}
+        >
+          <path d="M1 1L5 5L9 1" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+        </svg>
       </motion.p>
 
-      {active !== null && (
-        <motion.div
-          initial={{ opacity: 0, scale: 0.85, y: 10 }}
-          animate={{ opacity: 1, scale: 1, y: 0 }}
-          transition={transition}
+      {isSelected && children && (
+        <div
+          style={{
+            position: 'absolute',
+            top: '100%',
+            left: '50%',
+            transform: 'translateX(-50%)',
+            paddingTop: '26px',
+            zIndex: 999999
+          }}
         >
-          {active === item && children && (
-            <div style={{ position: 'absolute', top: '100%', left: '50%', transform: 'translateX(-50%)', paddingTop: '8px', zIndex: 99999 }}>
-              <motion.div
-                transition={transition}
-                layoutId="active"
-                style={{
-                  overflow: 'hidden',
-                  borderRadius: '16px',
-                  border: '1px solid rgba(255, 255, 255, 0.15)',
-                  backgroundColor: '#0a0d12',
-                  boxShadow: '0 20px 40px rgba(0, 0, 0, 0.8)',
-                  backdropFilter: 'blur(20px)',
-                  WebkitBackdropFilter: 'blur(20px)',
-                  color: '#ffffff'
-                }}
-              >
-                <motion.div layout style={{ height: '100%', width: 'max-content', padding: '16px' }}>
-                  {children}
-                </motion.div>
-              </motion.div>
-            </div>
-          )}
-        </motion.div>
+          {/* Invisible hit bridge covering gap between link and popup container */}
+          <div
+            style={{
+              position: 'absolute',
+              top: '-15px',
+              left: '-40px',
+              right: '-40px',
+              height: '45px',
+              backgroundColor: 'transparent'
+            }}
+          />
+          <motion.div
+            initial={{ opacity: 0, scale: 0.94, y: -6 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.94, y: -6 }}
+            transition={transition}
+            style={{
+              overflow: 'hidden',
+              borderRadius: '20px',
+              border: '1px solid rgba(255, 255, 255, 0.18)',
+              backgroundColor: 'rgba(10, 13, 18, 0.96)',
+              boxShadow: '0 24px 48px -12px rgba(0, 0, 0, 0.85), 0 0 0 1px rgba(255, 255, 255, 0.08)',
+              backdropFilter: 'blur(24px) saturate(180%)',
+              WebkitBackdropFilter: 'blur(24px) saturate(180%)',
+              color: '#ffffff'
+            }}
+          >
+            <motion.div layout style={{ height: '100%', width: 'max-content', padding: '18px' }}>
+              {children}
+            </motion.div>
+          </motion.div>
+        </div>
       )}
     </div>
   );
@@ -104,15 +140,18 @@ export const ProductItem = ({
   description,
   href,
   src,
+  onClick,
 }: {
   title: string;
   description: string;
   href: string;
   src: string;
+  onClick?: (e: React.MouseEvent<HTMLAnchorElement>) => void;
 }) => {
   return (
     <Link
       href={href}
+      onClick={onClick}
       className="flex space-x-2"
       style={{
         display: 'flex',
@@ -157,14 +196,17 @@ export const ProductItem = ({
 
 export const HoveredLink = ({
   children,
+  onClick,
   ...rest
 }: {
   children: React.ReactNode;
   href: string;
+  onClick?: (e: React.MouseEvent<HTMLAnchorElement>) => void;
 }) => {
   return (
     <Link
       {...rest}
+      onClick={onClick}
       className="text-neutral-700 hover:text-black dark:text-neutral-200"
       style={{
         color: 'rgba(255, 255, 255, 0.8)',

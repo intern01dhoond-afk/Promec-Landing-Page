@@ -613,30 +613,21 @@ document.addEventListener("DOMContentLoaded", () => {
     if (heroContent) {
       gsap.set(heroContent, { autoAlpha: 1, visibility: "visible" });
     }
-    if (window.scrollY === 0) {
-      if (heroVideoWrapper) {
-        gsap.set(heroVideoWrapper, { autoAlpha: 1, visibility: "visible" });
-      }
-      if (heroCanvas) {
-        gsap.set(heroCanvas, { autoAlpha: 0, visibility: "hidden" });
-      }
-      if (heroVideo && heroVideo.paused) {
-        heroVideo.play().catch(() => {});
-      }
-      const heroCardVideos = document.querySelectorAll(".mini-showreel video");
-      heroCardVideos.forEach((v) => {
-        v.muted = true;
-        v.playsInline = true;
-        if (v.paused) v.play().catch(() => {});
-      });
-    } else {
-      if (heroCanvas) {
-        gsap.set(heroCanvas, { autoAlpha: 1, visibility: "visible" });
-      }
-      if (heroVideoWrapper) {
-        gsap.set(heroVideoWrapper, { autoAlpha: 0, visibility: "hidden" });
-      }
+    if (heroCanvas) {
+      gsap.set(heroCanvas, { autoAlpha: 1, visibility: "visible" });
     }
+    if (heroVideoWrapper) {
+      gsap.set(heroVideoWrapper, { autoAlpha: 0, visibility: "hidden" });
+    }
+    if (heroVideo && !heroVideo.paused) {
+      heroVideo.pause();
+    }
+    const heroCardVideos = document.querySelectorAll(".mini-showreel video");
+    heroCardVideos.forEach((v) => {
+      v.muted = true;
+      v.playsInline = true;
+      if (v.paused) v.play().catch(() => {});
+    });
     resizeHeroCanvas();
     drawHeroCanvasFrame(frame0);
   };
@@ -697,18 +688,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
       const heroVideoWrapper = document.querySelector(".hero__video");
 
-      if (progress <= 0.01) {
-        if (heroCanvas) gsap.set(heroCanvas, { autoAlpha: 0, visibility: "hidden" });
-        if (heroVideoWrapper) gsap.set(heroVideoWrapper, { autoAlpha: 1, visibility: "visible" });
-        if (heroVideo && heroVideo.paused) {
-          heroVideo.play().catch(() => {});
-        }
-      } else {
-        if (heroCanvas) gsap.set(heroCanvas, { autoAlpha: 1, visibility: "visible" });
-        if (heroVideoWrapper) gsap.set(heroVideoWrapper, { autoAlpha: 0, visibility: "hidden" });
-        if (heroVideo && !heroVideo.paused) {
-          heroVideo.pause();
-        }
+      if (heroCanvas) gsap.set(heroCanvas, { autoAlpha: 1, visibility: "visible" });
+      if (heroVideoWrapper) gsap.set(heroVideoWrapper, { autoAlpha: 0, visibility: "hidden" });
+      if (heroVideo && !heroVideo.paused) {
+        heroVideo.pause();
       }
 
       // 1. Draw 1080p canvas frame

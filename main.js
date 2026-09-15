@@ -623,6 +623,12 @@ document.addEventListener("DOMContentLoaded", () => {
       if (heroVideo && heroVideo.paused) {
         heroVideo.play().catch(() => {});
       }
+      const heroCardVideos = document.querySelectorAll(".mini-showreel video");
+      heroCardVideos.forEach((v) => {
+        v.muted = true;
+        v.playsInline = true;
+        if (v.paused) v.play().catch(() => {});
+      });
     } else {
       if (heroCanvas) {
         gsap.set(heroCanvas, { autoAlpha: 1, visibility: "visible" });
@@ -822,14 +828,21 @@ document.addEventListener("DOMContentLoaded", () => {
         storyTagText.textContent = categoryTagLabels[index];
       }
 
-      // Automatically play video for active category row
+      // Automatically play video for active category row and pause inactive ones
       storyRows.forEach((r, i) => {
         const video = r.querySelector(".aqua-story__row-bg-video");
         if (video) {
           if (i === index) {
+            if (video.getAttribute("data-src") && !video.src) {
+              video.src = video.getAttribute("data-src");
+            }
             gsap.to(video, { opacity: 1, duration: 0.5 });
             if (video.paused) {
               video.play().catch(() => {});
+            }
+          } else {
+            if (!video.paused) {
+              video.pause();
             }
           }
         }
@@ -1056,19 +1069,30 @@ document.addEventListener("DOMContentLoaded", () => {
       if (rowVideo) {
         rowVideo.muted = true;
         rowVideo.playsInline = true;
-        rowVideo.load();
 
         ScrollTrigger.create({
           trigger: row,
-          start: "top 80%",
-          end: "bottom 20%",
+          start: "top 85%",
+          end: "bottom 15%",
           onEnter: () => {
+            if (rowVideo.getAttribute("data-src") && !rowVideo.src) {
+              rowVideo.src = rowVideo.getAttribute("data-src");
+            }
             gsap.to(rowVideo, { opacity: 1, duration: 0.6 });
             if (rowVideo.paused) rowVideo.play().catch(() => {});
           },
           onEnterBack: () => {
+            if (rowVideo.getAttribute("data-src") && !rowVideo.src) {
+              rowVideo.src = rowVideo.getAttribute("data-src");
+            }
             gsap.to(rowVideo, { opacity: 1, duration: 0.6 });
             if (rowVideo.paused) rowVideo.play().catch(() => {});
+          },
+          onLeave: () => {
+            if (!rowVideo.paused) rowVideo.pause();
+          },
+          onLeaveBack: () => {
+            if (!rowVideo.paused) rowVideo.pause();
           }
         });
       }
@@ -1472,28 +1496,69 @@ document.addEventListener("DOMContentLoaded", () => {
   const lightboxVideo = lightbox ? lightbox.querySelector("video") : null;
   const lightboxCloseBtns = document.querySelectorAll('[data-bunny-lightbox-control="close"], .bunny-lightbox__close');
   const videoCards = document.querySelectorAll('[data-bunny-lightbox-control="open"], .mini-showreel__card');
-  const playPauseBtn = lightbox ? lightbox.querySelector('[data-player-control="playpause"]') : null;
+  const playPauseBtns = lightbox ? lightbox.querySelectorAll('[data-player-control="playpause"]') : [];
   const muteBtn = lightbox ? lightbox.querySelector('[data-player-control="mute"]') : null;
   const fullscreenBtn = lightbox ? lightbox.querySelector('[data-player-control="fullscreen"]') : null;
   const timeProgress = lightbox ? lightbox.querySelector("[data-player-time-progress]") : null;
   const timeDuration = lightbox ? lightbox.querySelector("[data-player-time-duration]") : null;
   const timelineProgress = lightbox ? lightbox.querySelector("[data-player-progress]") : null;
-  const timelineBar = lightbox ? lightbox.querySelector(".bunny-lightbox-player__timeline") : null;
+  const timelineBar = lightbox ? lightbox.querySelector(".bunny-lightbox-player__timeline, [data-player-timeline]") : null;
 
-  const RELEASE_VIDEO_SRC = "assets/ASMR%20PROMEC%20LAPTOP.mp4";
+  const RELEASE_VIDEO_SRC = "assets/asmr_promec_laptop.mp4";
+
+  function updatePlayPauseIcons(isPaused) {
+    if (!lightbox) return;
+    const pauseSvgs = lightbox.querySelectorAll(".bunny-pause-svg, .bunny-player__pause-svg");
+    const playSvgs = lightbox.querySelectorAll(".bunny-play-svg, .bunny-player__play-svg");
+    pauseSvgs.forEach((svg) => (svg.style.display = isPaused ? "none" : "block"));
+    playSvgs.forEach((svg) => (svg.style.display = isPaused ? "block" : "none"));
+  }
+
+  function updateMuteIcons(isMuted) {
+    if (!lightbox) return;
+    const volUp = lightbox.querySelector(".bunny-volume-up-svg, .bunny-player__volume-up-svg");
+    const volMute = lightbox.querySelector(".bunny-volume-mute-svg, .bunny-player__volume-mute-svg");
+    if (volUp) volUp.style.display = isMuted ? "none" : "block";
+    if (volMute) volMute.style.display = isMuted ? "block" : "none";
+  }
 
   function openLightbox() {
     if (!lightbox || !lightboxVideo) return;
-    if (!lightboxVideo.src) lightboxVideo.src = RELEASE_VIDEO_SRC;
+    if (!lightboxVideo.src || !lightboxVideo.src.includes("asmr_promec_laptop")) {
+      lightboxVideo.src = RELEASE_VIDEO_SRC;
+      lightboxVideo.load();
+    }
     lightbox.classList.add("is-open");
+    document.body.style.overflow = "hidden";
     lightboxVideo.currentTime = 0;
-    lightboxVideo.play().catch(() => {});
+    lightboxVideo.muted = false;
+    updateMuteIcons(false);
+
+    const playPromise = lightboxVideo.play();
+    if (playPromise !== undefined) {
+      playPromise
+        .then(() => {
+          updatePlayPauseIcons(false);
+        })
+        .catch((err) => {
+          console.warn("Autoplay with sound blocked by browser, trying muted play:", err);
+          lightboxVideo.muted = true;
+          updateMuteIcons(true);
+          lightboxVideo.play().then(() => {
+            updatePlayPauseIcons(false);
+          }).catch(() => {
+            updatePlayPauseIcons(true);
+          });
+        });
+    }
   }
 
   function closeLightbox() {
     if (!lightbox || !lightboxVideo) return;
     lightbox.classList.remove("is-open");
+    document.body.style.overflow = "";
     lightboxVideo.pause();
+    updatePlayPauseIcons(true);
   }
 
   videoCards.forEach((card) => {
@@ -1504,25 +1569,64 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   lightboxCloseBtns.forEach((btn) => {
-    btn.addEventListener("click", closeLightbox);
+    btn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      closeLightbox();
+    });
   });
 
-  if (playPauseBtn && lightboxVideo) {
-    playPauseBtn.addEventListener("click", () => {
-      if (lightboxVideo.paused) lightboxVideo.play();
-      else lightboxVideo.pause();
+  if (lightbox) {
+    lightbox.addEventListener("click", (e) => {
+      if (e.target.classList.contains("bunny-lightbox__dark") || e.target === lightbox) {
+        closeLightbox();
+      }
+    });
+  }
+
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && lightbox && lightbox.classList.contains("is-open")) {
+      closeLightbox();
+    }
+  });
+
+  playPauseBtns.forEach((btn) => {
+    btn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      if (!lightboxVideo) return;
+      if (lightboxVideo.paused) {
+        lightboxVideo.play();
+        updatePlayPauseIcons(false);
+      } else {
+        lightboxVideo.pause();
+        updatePlayPauseIcons(true);
+      }
+    });
+  });
+
+  if (lightboxVideo) {
+    lightboxVideo.addEventListener("click", (e) => {
+      e.stopPropagation();
+      if (lightboxVideo.paused) {
+        lightboxVideo.play();
+        updatePlayPauseIcons(false);
+      } else {
+        lightboxVideo.pause();
+        updatePlayPauseIcons(true);
+      }
     });
   }
 
   if (muteBtn && lightboxVideo) {
-    muteBtn.addEventListener("click", () => {
+    muteBtn.addEventListener("click", (e) => {
+      e.stopPropagation();
       lightboxVideo.muted = !lightboxVideo.muted;
-      muteBtn.style.opacity = lightboxVideo.muted ? "0.6" : "1";
+      updateMuteIcons(lightboxVideo.muted);
     });
   }
 
   if (fullscreenBtn && lightboxVideo) {
-    fullscreenBtn.addEventListener("click", () => {
+    fullscreenBtn.addEventListener("click", (e) => {
+      e.stopPropagation();
       if (!document.fullscreenElement) {
         lightbox.requestFullscreen?.() || lightboxVideo.requestFullscreen?.();
       } else {
@@ -1534,13 +1638,13 @@ document.addEventListener("DOMContentLoaded", () => {
   if (lightboxVideo) {
     lightboxVideo.addEventListener("timeupdate", () => {
       const curr = lightboxVideo.currentTime;
-      const dur = lightboxVideo.duration || 176;
+      const dur = (lightboxVideo.duration && !isNaN(lightboxVideo.duration)) ? lightboxVideo.duration : 24;
       if (timeProgress) {
         const m = Math.floor(curr / 60);
         const s = Math.floor(curr % 60);
         timeProgress.textContent = String(m).padStart(2, "0") + ":" + String(s).padStart(2, "0");
       }
-      if (timeDuration && lightboxVideo.duration) {
+      if (timeDuration) {
         const dm = Math.floor(dur / 60);
         const ds = Math.floor(dur % 60);
         timeDuration.textContent = String(dm).padStart(2, "0") + ":" + String(ds).padStart(2, "0");
@@ -1553,9 +1657,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
     if (timelineBar) {
       timelineBar.addEventListener("click", (e) => {
+        e.stopPropagation();
         const rect = timelineBar.getBoundingClientRect();
         const clickX = e.clientX - rect.left;
-        const pct = clickX / rect.width;
+        const pct = Math.max(0, Math.min(1, clickX / rect.width));
         if (lightboxVideo.duration) {
           lightboxVideo.currentTime = pct * lightboxVideo.duration;
         }
@@ -1876,24 +1981,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const footerOverlapSec = document.querySelector(".aqua-footer");
 
   if (ctaBanner && footerOverlapSec) {
-    const isMobile = window.innerWidth <= 768;
-    const liftDistance = isMobile ? -140 : -220;
-
-    gsap.fromTo(
-      ctaBanner,
-      { y: 0 },
-      {
-        y: liftDistance,
-        ease: "none",
-        scrollTrigger: {
-          trigger: footerOverlapSec,
-          start: "top bottom",
-          end: "top 40%",
-          scrub: 0.6,
-          invalidateOnRefresh: true,
-        }
-      }
-    );
+    gsap.set(ctaBanner, { y: 0 });
   }
 
   // Refresh ScrollTrigger after all pins and layouts are configured

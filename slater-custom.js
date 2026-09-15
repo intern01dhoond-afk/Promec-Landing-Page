@@ -1317,44 +1317,8 @@ function initBunnyPlayers(scope = nextPage) {
     const wantsLoop = !isInsideAutoTabs && (mode === "background" || (mode === "inline" && autoplay));
 
     if (wantsLoop) {
-      video.loop = false;
-      video.removeAttribute("loop");
-
-      const LOOP_LEAD = 0.3;
-
-      function seekToStart() {
-        try {
-          if (typeof video.fastSeek === "function") video.fastSeek(0);
-          else video.currentTime = 0;
-        } catch (_) {}
-      }
-
-      function shouldRewind() {
-        return (
-          video.duration &&
-          isFinite(video.duration) &&
-          !video.paused &&
-          video.currentTime >= video.duration - LOOP_LEAD
-        );
-      }
-
-      if (typeof video.requestVideoFrameCallback === "function") {
-        const onFrame = () => {
-          if (shouldRewind()) seekToStart();
-          if (!video.ended) video.requestVideoFrameCallback(onFrame);
-        };
-
-        video.requestVideoFrameCallback(onFrame);
-      } else {
-        video.addEventListener("timeupdate", () => {
-          if (shouldRewind()) seekToStart();
-        });
-      }
-
-      video.addEventListener("ended", () => {
-        seekToStart();
-        safePlay(video);
-      });
+      video.loop = true;
+      video.setAttribute("loop", "");
     }
 
     if (autoplay) video.autoplay = false;

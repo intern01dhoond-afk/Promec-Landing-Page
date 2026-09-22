@@ -797,6 +797,8 @@ document.addEventListener("DOMContentLoaded", () => {
     const storyTagText = storySection.querySelector("[data-story-tag-text]");
     const categoryTagLabels = ["AUTOCARE", "HOME CARE", "GIG WORKERS", "CORPORATE CARE"];
 
+    let currentCategoryIdx = -1;
+
     function setActiveStoryCategory(index) {
       if (storyProductImgs.length > 0) {
         storyProductImgs.forEach((img, i) => {
@@ -811,7 +813,10 @@ document.addEventListener("DOMContentLoaded", () => {
         storyTagText.textContent = categoryTagLabels[index];
       }
 
-      // Automatically play video for active category row and pause inactive ones
+      if (currentCategoryIdx === index) return;
+      currentCategoryIdx = index;
+
+      // Automatically play video for active category row soon after device sits in place, and fade out inactive ones to show static images
       storyRows.forEach((r, i) => {
         const video = r.querySelector(".aqua-story__row-bg-video");
         if (video) {
@@ -819,11 +824,12 @@ document.addEventListener("DOMContentLoaded", () => {
             if (video.getAttribute("data-src") && !video.src) {
               video.src = video.getAttribute("data-src");
             }
-            gsap.to(video, { opacity: 1, duration: 0.5 });
+            gsap.to(video, { opacity: 1, duration: 0.6, delay: 0.15 });
             if (video.paused) {
               video.play().catch(() => {});
             }
           } else {
+            gsap.to(video, { opacity: 0, duration: 0.4 });
             if (!video.paused) {
               video.pause();
             }
@@ -837,34 +843,132 @@ document.addEventListener("DOMContentLoaded", () => {
 
       const mm = gsap.matchMedia();
       mm.add("(min-width: 992px)", () => {
-        // 10A-0. REVEAL SECTION 2 FROM BEHIND HERO VIDEO ON SCROLL
-        ScrollTrigger.create({
-          trigger: storySection,
-          start: "top bottom",
-          end: "top top",
-          scrub: 0.5,
-          onUpdate: (self) => {
-            const p = self.progress;
-            if (heroSection) {
-              gsap.set(heroSection, { yPercent: -25 * p, opacity: 1 - 0.35 * p });
-            }
-            gsap.set(storySection, {
-              scale: 0.93 + 0.07 * p,
-              opacity: 0.7 + 0.3 * p,
-              transformOrigin: "center top"
-            });
-          },
-          onLeave: () => {
-            if (heroSection) gsap.set(heroSection, { yPercent: 0, opacity: 1 });
-            gsap.set(storySection, { scale: 1, opacity: 1 });
-          },
-          onLeaveBack: () => {
-            if (heroSection) gsap.set(heroSection, { yPercent: 0, opacity: 1 });
-            gsap.set(storySection, { scale: 0.93, opacity: 0.7 });
-          }
-        });
+        // ---------------------------------------------------------------
+        // PHASE 1: FIXED-POSITION BRIDGE — HERO → SECTION 2 ROW 1
+        // Uses .usp__transition (position:fixed, z-index:55) to visually
+        // carry the device from the hero canvas center into Section 2's
+        // Row 1 product slot position.
+        // ---------------------------------------------------------------
+        const heroCanvasEl = document.querySelector(".hero__canvas");
+        const bridgeEl = document.querySelector("[data-usp-transition]");
+        const bridgeCard = bridgeEl ? bridgeEl.querySelector("[data-usp-transition-card]") : null;
+        const productFrame = productTraveler.querySelector(".aqua-story__product-frame");
+        const img1 = productFrame ? productFrame.querySelector('[data-story-img="1"]') : null;
+        const img2 = productFrame ? productFrame.querySelector('[data-story-img="2"]') : null;
+        const img3 = productFrame ? productFrame.querySelector('[data-story-img="3"]') : null;
+        const img4 = productFrame ? productFrame.querySelector('[data-story-img="4"]') : null;
 
-        // Pin stage within story section without locking page scrolling
+        // Row 1's right-side slot target position (percentage of viewport)
+        // The device needs to land at ~right 25% of viewport, vertically centered
+        const row1TargetXPercent = 22; // positive = right of center (percentage)
+        const row1TargetYOffset = -10; // slight upward shift in vh
+
+        // Initialize bridge as hidden
+        if (bridgeEl) gsap.set(bridgeEl, { autoAlpha: 0 });
+
+        // Initialize product stage hidden (will be revealed after bridge handoff)
+        gsap.set(productStage, { autoAlpha: 0 });
+        gsap.set(productTraveler, { x: 320, y: 0, scale: 1.0, opacity: 1 });
+        if (productFrame) gsap.set(productFrame, { rotateY: 0 });
+        if (img1) gsap.set(img1, { opacity: 1 });
+        if (img2) gsap.set(img2, { opacity: 0 });
+        if (img3) gsap.set(img3, { opacity: 0 });
+        if (img4) gsap.set(img4, { opacity: 0 });
+
+        // Track bridge state to prevent flickering
+        let bridgeComplete = false;
+
+        // BRIDGE SCROLL TRIGGER: Spans from hero unpin to Section 2 Row 1 in-view
+        if (bridgeEl && bridgeCard) {
+          ScrollTrigger.create({
+            trigger: storySection,
+            start: "top 85%",
+            end: "top 15%",
+            scrub: 0.6,
+            onUpdate: (self) => {
+              const p = self.progress;
+
+              // Show bridge element
+              gsap.set(bridgeEl, { autoAlpha: 1 });
+
+              // Animate bridge card from center of viewport to Row 1 slot position
+              // Start: centered (translate(-50%, -50%)) with larger scale
+              // End: offset right with normal scale
+              const startScale = 1.4;
+              const endScale = 1.0;
+              const currentScale = startScale + (endScale - startScale) * p;
+
+              // X movement: center (0%) → right side (~22vw from center)
+              const targetX = row1TargetXPercent * (window.innerWidth / 100);
+              const currentX = targetX * p;
+
+              // Y movement: center → slight upward
+              const targetY = row1TargetYOffset * (window.innerHeight / 100);
+              const currentY = targetY * p;
+
+              gsap.set(bridgeCard, {
+                x: currentX,
+                y: currentY,
+                scale: currentScale,
+                opacity: Math.min(1, p * 3) // fade in quickly in first 33%
+              });
+
+              // Fade out hero canvas simultaneously
+              if (heroCanvasEl) {
+                const canvasOpacity = Math.max(0, 1 - p * 2.5);
+                gsap.set(heroCanvasEl, {
+                  opacity: canvasOpacity,
+                  autoAlpha: canvasOpacity,
+                  visibility: canvasOpacity > 0.01 ? "visible" : "hidden"
+                });
+              }
+
+              // At 100% progress: handoff to productTraveler
+              if (p >= 0.98 && !bridgeComplete) {
+                bridgeComplete = true;
+                gsap.set(bridgeEl, { autoAlpha: 0 });
+                gsap.set(productStage, { autoAlpha: 1 });
+                setActiveStoryCategory(0);
+              }
+
+              // When scrolling back, re-show bridge and hide product stage
+              if (p < 0.95 && bridgeComplete) {
+                bridgeComplete = false;
+                gsap.set(productStage, { autoAlpha: 0 });
+                gsap.set(bridgeEl, { autoAlpha: 1 });
+                setActiveStoryCategory(-1);
+              }
+            },
+            onLeaveBack: () => {
+              // Fully scrolled back above Section 2 — reset everything
+              bridgeComplete = false;
+              gsap.set(bridgeEl, { autoAlpha: 0 });
+              gsap.set(productStage, { autoAlpha: 0 });
+              if (bridgeCard) gsap.set(bridgeCard, { x: 0, y: 0, scale: 1.4, opacity: 0 });
+              setActiveStoryCategory(-1);
+              if (heroCanvasEl) {
+                gsap.set(heroCanvasEl, { opacity: 1, autoAlpha: 1, visibility: "visible" });
+              }
+            },
+            onLeave: () => {
+              // Fully past bridge zone — ensure clean state
+              bridgeComplete = true;
+              gsap.set(bridgeEl, { autoAlpha: 0 });
+              gsap.set(productStage, { autoAlpha: 1 });
+              if (heroCanvasEl) {
+                gsap.set(heroCanvasEl, { opacity: 0, autoAlpha: 0, visibility: "hidden" });
+              }
+            }
+          });
+        }
+
+        // ---------------------------------------------------------------
+        // PHASE 2: SECTION 2 INTERNAL ROW-TO-ROW TRAVEL
+        // Pin productStage within Section 2 and animate productTraveler
+        // horizontally between rows with 3D banking tilt and model swaps.
+        // ---------------------------------------------------------------
+
+        // Pin the product stage for the full Section 2 scroll
         ScrollTrigger.create({
           trigger: storySection,
           start: "top top",
@@ -874,210 +978,90 @@ document.addEventListener("DOMContentLoaded", () => {
           invalidateOnRefresh: true
         });
 
-        // 10A-1. CINEMATIC HERO -> SECTION 2 EXACT 2-STAGE SCROLL CHOREOGRAPHY
-        const uspTransition = document.querySelector("[data-usp-transition]");
-        const uspCard = uspTransition ? uspTransition.querySelector("[data-usp-transition-card]") : null;
-        const uspImg = uspTransition ? uspTransition.querySelector("[data-usp-transition-img]") : null;
-        const heroCanvasEl = document.querySelector(".hero__canvas");
-        const heroFadeEl = document.querySelector(".hero__fade");
-        const row1El = storySection.querySelector('[data-story-row="1"]');
-        const row1Video = storySection.querySelector('[data-story-video="1"]');
-        const card1TextCol = storyRows[0] ? storyRows[0].querySelector(".aqua-story__text-col") : null;
-
-        if (uspImg) {
-          uspImg.src = "assets/promec_yellow_model.png";
-        }
-
-        if (row1Video) {
-          row1Video.load();
-        }
-
-        // Initially hide product stage until handoff reaches Section 2
-        gsap.set(productStage, { autoAlpha: 0 });
-        if (card1TextCol) {
-          gsap.set(card1TextCol, { opacity: 0, y: 45 });
-        }
-        if (uspTransition) {
-          gsap.set(uspTransition, { autoAlpha: 0 });
-        }
-        if (row1Video) {
-          gsap.set(row1Video, { opacity: 0 });
-        }
-
-        function getStartRect() {
-          const w = Math.min(680, Math.max(460, window.innerWidth * 0.46));
-          const h = w * 1.15;
-          const x = (window.innerWidth - w) / 2;
-          const y = -h * 0.35; // Originates from the top of the viewport coming from Hero
-          return { x, y, width: w, height: h };
-        }
-
-        function getEndRect() {
-          if (window.innerWidth < 992) {
-            const w = Math.min(320, Math.max(240, window.innerWidth * 0.68));
-            const h = w * 1.18;
-            const x = (window.innerWidth - w) / 2;
-            const y = window.innerHeight * 0.25;
-            return { x, y, width: w, height: h };
-          }
-
-          const winW = window.innerWidth;
-          const winH = window.innerHeight;
-          const videoNativeW = 1920;
-          const videoNativeH = 1080;
-          const videoAspect = videoNativeW / videoNativeH;
-          const containerAspect = winW / winH;
-
-          let renderW, renderH, offsetX, offsetY;
-
-          if (containerAspect > videoAspect) {
-            renderW = winW;
-            renderH = winW / videoAspect;
-            offsetX = 0;
-            offsetY = (winH - renderH) / 2;
-          } else {
-            renderH = winH;
-            renderW = winH * videoAspect;
-            offsetX = (winW - renderW) / 2;
-            offsetY = 0;
-          }
-
-          const normX = 1255 / 1920;
-          const normY = 210 / 1080;
-          const normW = 530 / 1920;
-          const normH = 620 / 1080;
-
-          const x = offsetX + normX * renderW;
-          const y = offsetY + normY * renderH;
-          const w = normW * renderW;
-          const h = normH * renderH;
-
-          return { x, y, width: w, height: h };
-        }
-
-        // Single master ScrollTrigger for Section 2 Row 1 Choreography (Single Scroll without extra pinning)
-        ScrollTrigger.create({
-          trigger: row1El || storySection,
-          start: "top 80%",
-          end: "bottom top",
-          onEnter: () => {
-            if (uspTransition) gsap.set(uspTransition, { autoAlpha: 0, display: "none" });
-            if (heroCanvasEl) gsap.set(heroCanvasEl, { autoAlpha: 0 });
-            if (heroFadeEl) gsap.set(heroFadeEl, { autoAlpha: 0 });
-            if (card1TextCol) gsap.set(card1TextCol, { opacity: 1, y: 0 });
-            if (row1Video) {
-              gsap.set(row1Video, { opacity: 1 });
-              if (row1Video.paused) row1Video.play().catch(() => {});
-            }
-          },
-          onEnterBack: () => {
-            if (card1TextCol) gsap.set(card1TextCol, { opacity: 1, y: 0 });
-            if (row1Video) {
-              gsap.set(row1Video, { opacity: 1 });
-              if (row1Video.paused) row1Video.play().catch(() => {});
-            }
-          }
-        });
-
-        const productFrame = productTraveler.querySelector(".aqua-story__product-frame");
-
-        // 10A-2. SECTION 2 HORIZONTAL TRAVELER & 3D CARD FLIP TIMELINE
-        // Flips from Card 1 -> Card 2 -> Card 3 -> Card 4 as each usecase is reached
+        // Row-to-Row travel timeline (starts with device already in Row 1 position)
         const storyTL = gsap.timeline({
           scrollTrigger: {
             trigger: storySection,
             start: "top top",
             end: "bottom bottom",
-            scrub: 0.8,
+            scrub: 0.9,
             invalidateOnRefresh: true,
             onUpdate: (self) => {
               const p = self.progress;
-              // Midpoints: 0.6 / 3.65 = 0.164, 1.8 / 3.65 = 0.493, 3.0 / 3.65 = 0.822
-              let activeIdx = 0;
-              if (p >= 0.822) {
-                activeIdx = 3;
-              } else if (p >= 0.493) {
-                activeIdx = 2;
-              } else if (p >= 0.164) {
-                activeIdx = 1;
+
+              // Symmetric Category & Video sync (works identically forwards & backwards)
+              // Only activate categories once device is in the resting zone for each row
+              let activeIdx = -1;
+              if (p < 0.05) {
+                activeIdx = 0; // Row 1 — already seated from bridge handoff
+              } else if (p >= 0.20 && p < 0.25) {
+                // Traveling between Row 1 → Row 2
+                activeIdx = -1;
+              } else if (p >= 0.25 && p < 0.45) {
+                activeIdx = 1; // Row 2 — HOME CARE
+              } else if (p >= 0.45 && p < 0.52) {
+                // Traveling between Row 2 → Row 3
+                activeIdx = -1;
+              } else if (p >= 0.52 && p < 0.72) {
+                activeIdx = 2; // Row 3 — GIG WORKERS
+              } else if (p >= 0.72 && p < 0.78) {
+                // Traveling between Row 3 → Row 4
+                activeIdx = -1;
+              } else if (p >= 0.78) {
+                activeIdx = 3; // Row 4 — CORPORATE CARE
               } else {
-                activeIdx = 0;
+                activeIdx = 0; // Default to Row 1 while in top zone
               }
               setActiveStoryCategory(activeIdx);
+            },
+            onLeaveBack: () => {
+              // Scrolled back to top of Section 2 — bridge handles the transition
+              setActiveStoryCategory(-1);
             }
           }
         });
 
-        // Query model images inside product frame
-        const img1 = productFrame ? productFrame.querySelector('[data-story-img="1"]') : null;
-        const img2 = productFrame ? productFrame.querySelector('[data-story-img="2"]') : null;
-        const img3 = productFrame ? productFrame.querySelector('[data-story-img="3"]') : null;
-        const img4 = productFrame ? productFrame.querySelector('[data-story-img="4"]') : null;
+        // Timeline durations (total ~6.0 units)
+        // Row 1 rest: 0 → 0.8
+        // Travel 1→2: 0.8 → 2.0
+        // Row 2 rest: 2.0 → 2.8
+        // Travel 2→3: 2.8 → 4.0
+        // Row 3 rest: 4.0 → 4.8
+        // Travel 3→4: 4.8 → 6.0
 
-        // Initialize starting position & opacities
-        gsap.set(productTraveler, { x: 320 });
-        if (productFrame) {
-          gsap.set(productFrame, { rotateY: 0, scale: 1 });
-        }
-        if (img1) gsap.set(img1, { opacity: 1 });
-        if (img2) gsap.set(img2, { opacity: 0 });
-        if (img3) gsap.set(img3, { opacity: 0 });
-        if (img4) gsap.set(img4, { opacity: 0 });
-
-        // --- TRANSITION 1: Card 01 (Autocare Yellow) -> Card 02 (Home Care Blue) ---
-        // Traveler glides right (+320) to left (-360) while model images smoothly scrub cross-fade at midpoint
+        // --- ROW 1 → ROW 2 (AUTOCARE → HOME CARE): Travel RIGHT → LEFT ---
         storyTL
-          .to(productTraveler, { x: -360, duration: 0.9, ease: "power1.inOut" }, 0.15)
-          .to(img1, { opacity: 0, duration: 0.4, ease: "power1.inOut" }, 0.4)
-          .to(img2, { opacity: 1, duration: 0.4, ease: "power1.inOut" }, 0.4)
+          .to(productTraveler, { x: -360, duration: 1.2, ease: "power1.inOut" }, 0.8)
+          .to(productFrame, { rotateY: -15, duration: 0.6, ease: "power1.in" }, 0.8)
+          .to(productFrame, { rotateY: 0, duration: 0.6, ease: "power1.out" }, 1.4)
+          .to(img1, { opacity: 0, duration: 0.5, ease: "power1.inOut" }, 1.1)
+          .to(img2, { opacity: 1, duration: 0.5, ease: "power1.inOut" }, 1.1)
 
-        // --- TRANSITION 2: Card 02 (Home Care Blue) -> Card 03 (Gig Workers Yellow) ---
-        // Traveler glides left (-360) to right (+320) while model images smoothly scrub cross-fade at midpoint
-          .to(productTraveler, { x: 320, duration: 0.9, ease: "power1.inOut" }, 1.35)
-          .to(img2, { opacity: 0, duration: 0.4, ease: "power1.inOut" }, 1.6)
-          .to(img3, { opacity: 1, duration: 0.4, ease: "power1.inOut" }, 1.6)
+        // --- ROW 2 → ROW 3 (HOME CARE → GIG WORKERS): Travel LEFT → RIGHT ---
+          .to(productTraveler, { x: 320, duration: 1.2, ease: "power1.inOut" }, 2.8)
+          .to(productFrame, { rotateY: 15, duration: 0.6, ease: "power1.in" }, 2.8)
+          .to(productFrame, { rotateY: 0, duration: 0.6, ease: "power1.out" }, 3.4)
+          .to(img2, { opacity: 0, duration: 0.5, ease: "power1.inOut" }, 3.1)
+          .to(img3, { opacity: 1, duration: 0.5, ease: "power1.inOut" }, 3.1)
 
-        // --- TRANSITION 3: Card 03 (Gig Workers Yellow) -> Card 04 (Corporate Care Blue) ---
-        // Traveler glides right (+320) to left (-360) earlier so it is parked before Row 4 text reaches center
-          .to(productTraveler, { x: -360, duration: 0.9, ease: "power1.inOut" }, 2.15)
-          .to(img3, { opacity: 0, duration: 0.4, ease: "power1.inOut" }, 2.35)
-          .to(img4, { opacity: 1, duration: 0.4, ease: "power1.inOut" }, 2.35)
-          .to(productTraveler, { x: -360, duration: 0.4 }, 3.05);
+        // --- ROW 3 → ROW 4 (GIG WORKERS → CORPORATE CARE): Travel RIGHT → LEFT ---
+          .to(productTraveler, { x: -360, duration: 1.2, ease: "power1.inOut" }, 4.8)
+          .to(productFrame, { rotateY: -15, duration: 0.6, ease: "power1.in" }, 4.8)
+          .to(productFrame, { rotateY: 0, duration: 0.6, ease: "power1.out" }, 5.4)
+          .to(img3, { opacity: 0, duration: 0.5, ease: "power1.inOut" }, 5.1)
+          .to(img4, { opacity: 1, duration: 0.5, ease: "power1.inOut" }, 5.1);
       });
     }
 
-    // Subtle scroll reveal for each row content as the user navigates down
+    // Ensure all row background videos load data source and configure row scroll triggers
     storyRows.forEach((row, idx) => {
       const rowVideo = row.querySelector(".aqua-story__row-bg-video");
       if (rowVideo) {
         rowVideo.muted = true;
         rowVideo.playsInline = true;
-
-        ScrollTrigger.create({
-          trigger: row,
-          start: "top 85%",
-          end: "bottom 15%",
-          onEnter: () => {
-            if (rowVideo.getAttribute("data-src") && !rowVideo.src) {
-              rowVideo.src = rowVideo.getAttribute("data-src");
-            }
-            gsap.to(rowVideo, { opacity: 1, duration: 0.6 });
-            if (rowVideo.paused) rowVideo.play().catch(() => {});
-          },
-          onEnterBack: () => {
-            if (rowVideo.getAttribute("data-src") && !rowVideo.src) {
-              rowVideo.src = rowVideo.getAttribute("data-src");
-            }
-            gsap.to(rowVideo, { opacity: 1, duration: 0.6 });
-            if (rowVideo.paused) rowVideo.play().catch(() => {});
-          },
-          onLeave: () => {
-            if (!rowVideo.paused) rowVideo.pause();
-          },
-          onLeaveBack: () => {
-            if (!rowVideo.paused) rowVideo.pause();
-          }
-        });
+        if (rowVideo.getAttribute("data-src") && !rowVideo.src) {
+          rowVideo.src = rowVideo.getAttribute("data-src");
+        }
       }
 
       ScrollTrigger.create({
